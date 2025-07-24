@@ -1,13 +1,13 @@
 # 🎓 University Student Management Dashboard
 
-ระบบจัดการนักศึกษาสำหรับมหาวิทยาลัย — Full-Stack SaaS Dashboard พัฒนาโดยใช้ **Next.js (App Router)** + **TailwindCSS** + **Tailwind UI**  
+ระบบจัดการนักศึกษาสำหรับมหาวิทยาลัย — Full-Stack SaaS Dashboard พัฒนาโดยใช้ **Next.js (App Router)** + **TailwindCSS**  
 
 ## 🔧 Tech Stack
 
 | Layer         | Tech                       |
 |---------------|----------------------------|
 | Frontend      | [Next.js](https://nextjs.org/) (App Router) |
-| Styling       | [Tailwind CSS](https://tailwindcss.com/) + Tailwind UI |
+| Styling       | [Tailwind CSS](https://tailwindcss.com/)|
 | Auth          | Supabase Auth |
 | Database      | Supabase |
 | Charts        | Chart.js |
