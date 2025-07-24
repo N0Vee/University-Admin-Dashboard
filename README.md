@@ -1,37 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎓 University Student Management Dashboard
 
-## Getting Started
+ระบบจัดการนักศึกษาสำหรับมหาวิทยาลัย — Full-Stack SaaS Dashboard พัฒนาโดยใช้ **Next.js (App Router)** + **TailwindCSS** + **Tailwind UI**  
 
-First, run the development server:
+## 🔧 Tech Stack
+
+| Layer         | Tech                       |
+|---------------|----------------------------|
+| Frontend      | [Next.js](https://nextjs.org/) (App Router) |
+| Styling       | [Tailwind CSS](https://tailwindcss.com/) + Tailwind UI |
+| Auth          | Supabase Auth |
+| Database      | Supabase |
+| Charts        | Chart.js |
+| Deployment    | Vercel   |
+
+---
+
+## 🧩 Features
+
+- 🔐 **Authentication & Role-based Access** (Admin, Instructor, Student)
+- 👨‍🎓 จัดการข้อมูลนักศึกษา (เพิ่ม/แก้ไข/ลบ/ค้นหา/กรอง)
+- 📚 จัดการรายวิชา
+- 📝 บันทึกและดูผลการเรียน (ตามเทอม)
+- 📊 Dashboard Analytics (จำนวนนักศึกษา, สัดส่วนตามคณะ/ปี)
+- 📣 ระบบประกาศข่าวสาร
+- 📁 รองรับ Import/Export ข้อมูล (CSV / PDF)
+- 🌗 รองรับ Dark Mode
+
+---
+
+## 🚀 Getting Started
 
 ```bash
+# 1. Clone repository
+git clone https://github.com/N0Vee/University-Admin-Dashboard.git
+cd University-Admin-Dashboard
+
+# 2. Install dependencies
+npm install
+
+# 3. Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-"# University-Admin-Dashboard" 
