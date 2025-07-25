@@ -1,6 +1,7 @@
 'use client'
 import { supabase } from '@/lib/supabaseClient'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
     BellIcon,
     MagnifyingGlassIcon,
@@ -20,6 +21,7 @@ import {
 } from '@heroicons/react/24/solid'
 
 export default function AddStudentPage() {
+    const router = useRouter()
     const [isGenerating, setIsGenerating] = useState(true)
     const [studentId, setStudentId] = useState("")
     const [generatedEmail, setGeneratedEmail] = useState("")
@@ -52,11 +54,11 @@ export default function AddStudentPage() {
 
     const navigation = [
         { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: false },
-        { name: 'จัดการนักศึกษา', href: '#', icon: UserGroupIcon, current: true },
-        { name: 'รายวิชา', href: '#', icon: BookOpenIcon, current: false },
-        { name: 'การลงทะเบียน', href: '#', icon: ClipboardDocumentListIcon, current: false },
-        { name: 'ปฏิทินกิจกรรม', href: '#', icon: CalendarDaysIcon, current: false },
-        { name: 'รายงาน', href: '#', icon: ChartBarIcon, current: false }
+        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon, current: true },
+        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon, current: false },
+        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon, current: false },
+        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon, current: false },
+        { name: 'รายงาน', href: '/report', icon: ChartBarIcon, current: false }
     ]
 
     const faculties = [
@@ -267,18 +269,7 @@ export default function AddStudentPage() {
                         </div>
 
                         <div className="hidden md:flex md:items-center md:space-x-6">
-                            {/* Search */}
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="ค้นหานักศึกษา..."
-                                    className="block w-full rounded-lg border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-
+                            
                             {/* Notifications */}
                             <button className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500">
                                 <span className="absolute -inset-1.5" />
@@ -337,7 +328,7 @@ export default function AddStudentPage() {
                                 {/* Page header */}
                                 <div className="mb-6">
                                     <button
-                                        onClick={handleGoBack}
+                                        onClick={() => router.push("/students/student_management")}
                                         className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
                                     >
                                         <ArrowLeftIcon className="h-4 w-4 mr-2" />

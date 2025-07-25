@@ -1,6 +1,6 @@
 'use client'
-
-import { useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
+import { useEffect, useState } from 'react'
 import { redirect, useRouter } from 'next/navigation'
 import {
     BellIcon,
@@ -23,52 +23,64 @@ import {
 
 export default function DashboardPage() {
     const router = useRouter()
+    const [students, setStudents] = useState([]);
+    const [studentsCount, setStudentsCount] = useState(0)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+
 
     // Mock data
     const stats = [
         {
             name: 'นักศึกษาทั้งหมด',
-            value: '12,847',
-            change: '+4.75%',
+            value: studentsCount,
+            change: '',
             changeType: 'positive',
             icon: UserGroupIcon,
             color: 'bg-indigo-500'
         },
         {
             name: 'นักศึกษาใหม่',
-            value: '2,394',
-            change: '+12.3%',
+            value: studentsCount,
+            change: '',
             changeType: 'positive',
             icon: AcademicCapIcon,
             color: 'bg-emerald-500'
         },
         {
             name: 'วิชาที่เปิดสอน',
-            value: '847',
-            change: '+2.1%',
-            changeType: 'positive',
+            value: '0',
+            change: '',
+            changeType: '',
             icon: BookOpenIcon,
             color: 'bg-amber-500'
         },
         {
             name: 'งานที่รอตรวจ',
-            value: '156',
-            change: '-8.2%',
+            value: '0',
+            change: '',
             changeType: 'negative',
             icon: ClipboardDocumentListIcon,
             color: 'bg-rose-500'
         }
     ]
 
-    const recentStudents = [
-        { id: 1, name: 'สมชาย ใจดี', studentId: 'STU001', faculty: 'วิศวกรรมศาสตร์', status: 'active', avatar: 'SC' },
-        { id: 2, name: 'สมใส รักเรียน', studentId: 'STU002', faculty: 'ครุศาสตร์', status: 'active', avatar: 'SR' },
-        { id: 3, name: 'วิชัย เก่งมาก', studentId: 'STU003', faculty: 'วิทยาศาสตร์', status: 'inactive', avatar: 'VG' },
-        { id: 4, name: 'มาลี สวยงาม', studentId: 'STU004', faculty: 'ศิลปศาสตร์', status: 'active', avatar: 'MS' },
-        { id: 5, name: 'ธนากร ฉลาด', studentId: 'STU005', faculty: 'บริหารธุรกิจ', status: 'active', avatar: 'TC' }
-    ]
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                const res = await fetch("/api/students")
+                const data = await res.json()
+                setStudents(data)
+                setStudentsCount(data.length)
+            } catch (error) {
+                throw new Error(error)
+            }
+        };
 
+        fetchStudents();
+
+    }, []);
+
+    
     const upcomingEvents = [
         { id: 1, title: 'วันลงทะเบียนเรียน', date: '2024-08-15', type: 'registration' },
         { id: 2, title: 'สอบกลางภาค', date: '2024-09-20', type: 'exam' },
@@ -77,12 +89,12 @@ export default function DashboardPage() {
     ]
 
     const navigation = [
-        { name: 'ภาพรวม', href: '#', icon: ChartBarIcon, current: true },
-        { name: 'จัดการนักศึกษา', href: '#', icon: UserGroupIcon, current: false },
-        { name: 'รายวิชา', href: '#', icon: BookOpenIcon, current: false },
-        { name: 'การลงทะเบียน', href: '#', icon: ClipboardDocumentListIcon, current: false },
-        { name: 'ปฏิทินกิจกรรม', href: '#', icon: CalendarDaysIcon, current: false },
-        { name: 'รายงาน', href: '#', icon: ChartBarIcon, current: false }
+        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: true },
+        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon, current: false },
+        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon, current: false },
+        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon, current: false },
+        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon, current: false },
+        { name: 'รายงาน', href: '/report', icon: ChartBarIcon, current: false }
     ]
 
     return (
@@ -103,17 +115,6 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="hidden md:flex md:items-center md:space-x-6">
-                            {/* Search */}
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="ค้นหานักศึกษา..."
-                                    className="block w-full rounded-lg border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
 
                             {/* Notifications */}
                             <button className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500">
@@ -149,8 +150,8 @@ export default function DashboardPage() {
                                         key={item.name}
                                         href={item.href}
                                         className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${item.current
-                                                ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                             }`}
                                     >
                                         <item.icon
@@ -189,7 +190,7 @@ export default function DashboardPage() {
                                         </button>
                                         <button
                                             type="button"
-                                            className="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                                            className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                                             onClick={() => router.push('/students/add_student')}
                                         >
                                             เพิ่มนักศึกษา
@@ -245,39 +246,29 @@ export default function DashboardPage() {
                                                     <h3 className="text-base font-semibold leading-6 text-gray-900">
                                                         นักศึกษาล่าสุด
                                                     </h3>
-                                                    <button className="text-sm text-indigo-600 hover:text-indigo-500">
+                                                    <button onClick={() => router.push('/students/student_management')} className="cursor-pointer text-sm text-indigo-600 hover:text-indigo-500">
                                                         ดูทั้งหมด
                                                     </button>
                                                 </div>
                                                 <div className="mt-6 flow-root">
                                                     <ul className="-my-5 divide-y divide-gray-200">
-                                                        {recentStudents.map((student) => (
+                                                        {students.map((student) => (
                                                             <li key={student.id} className="py-4">
                                                                 <div className="flex items-center space-x-4">
                                                                     <div className="flex-shrink-0">
                                                                         <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
-                                                                            <span className="text-sm font-medium text-white">
-                                                                                {student.avatar}
+                                                                            <span className="text-sm font-medium text-white ">
+                                                                                <img className=' h-10 w-10 rounded-full' src={student.profile_image_url} alt="" />
                                                                             </span>
                                                                         </div>
                                                                     </div>
                                                                     <div className="min-w-0 flex-1">
                                                                         <p className="truncate text-sm font-medium text-gray-900">
-                                                                            {student.name}
+                                                                            {student.title} {student.first_name} {student.last_name}
                                                                         </p>
                                                                         <p className="truncate text-sm text-gray-500">
-                                                                            {student.studentId} • {student.faculty}
+                                                                            {student.student_id} • {student.faculty}
                                                                         </p>
-                                                                    </div>
-                                                                    <div className="flex-shrink-0">
-                                                                        <span
-                                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${student.status === 'active'
-                                                                                    ? 'bg-green-100 text-green-800'
-                                                                                    : 'bg-gray-100 text-gray-800'
-                                                                                }`}
-                                                                        >
-                                                                            {student.status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-                                                                        </span>
                                                                     </div>
                                                                     <div className="flex-shrink-0">
                                                                         <button className="text-gray-400 hover:text-gray-500">
