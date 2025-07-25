@@ -1,24 +1,22 @@
+import { NextResponse } from "next/server";
 import { supabase } from '@/lib/supabaseClient'
 
-export async function GET(request) {
+export async function GET(req) {
+    const { searchParams } = new URL(req.url);
 
-    const url = request.nextUrl
+    const orderBy = searchParams.get("orderBy") || "id";
+    const order = searchParams.get("order") || "desc"; // เรียงจากใหม่ไปเก่าเป็นค่า default
 
-    const { data, error } = await supabase
+    let query = supabase
         .from("students")
         .select("*")
-        .order("id", { ascending: false });
+        .order(orderBy, { ascending: order === "asc" });
+
+    const { data, error } = await query;
 
     if (error) {
-        console.error("Error fetching students:", error);
-    } else {
-        return new Response(JSON.stringify(data), {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            status: 200,
-        })
-        
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    return NextResponse.json(data);
 }
