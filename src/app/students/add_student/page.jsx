@@ -1,5 +1,5 @@
 'use client'
-
+import { supabase } from '@/lib/supabaseClient'
 import { useState } from 'react'
 import {
     BellIcon,
@@ -41,7 +41,7 @@ export default function AddStudentPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     const navigation = [
-        { name: 'ภาพรวม', href: '#', icon: ChartBarIcon, current: false },
+        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: false },
         { name: 'จัดการนักศึกษา', href: '#', icon: UserGroupIcon, current: true },
         { name: 'รายวิชา', href: '#', icon: BookOpenIcon, current: false },
         { name: 'การลงทะเบียน', href: '#', icon: ClipboardDocumentListIcon, current: false },
@@ -60,7 +60,7 @@ export default function AddStudentPage() {
         'เทคโนโลยีสารสนเทศ'
     ]
 
-    const yearLevels = ['ปี 1', 'ปี 2', 'ปี 3', 'ปี 4', 'ปี 5', 'ปี 6']
+    const yearLevels = [1,2,3,4,5,6]
     const enrollmentTypes = ['ปกติ', 'กศ.บป.', 'นานาชาติ', 'พิเศษ']
 
     const handleInputChange = (e) => {
@@ -81,10 +81,86 @@ export default function AddStudentPage() {
         }
     }
 
-    const handleSubmit = (e) => {
-        // Simulate form submission
-        setShowSuccessModal(true)
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        try {
+
+            const { data: signUpData, error: signUpError} = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.idCard,
+            })
+            console.log(signUpData.user.id)
+            
+            let profileImageUrl = null
+
+            // 1. อัปโหลดรูปภาพก่อน (ถ้ามี)
+            if (formData.profileImage) {
+                const file = formData.profileImage
+                const fileExt = file.name.split('.').pop()
+                const filePath = `profiles/${formData.studentId}.${fileExt}`
+
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('img.students')
+                    .upload(filePath, file)
+
+                if (uploadError) {
+                    throw new Error('อัปโหลดรูปภาพไม่สำเร็จ: ' + uploadError.message)
+                }
+
+                // ได้ path แล้ว สร้าง public URL
+                const { data: publicUrlData } = supabase
+                    .storage
+                    .from('img.students')
+                    .getPublicUrl(filePath)
+
+                profileImageUrl = publicUrlData.publicUrl
+            }
+
+            const { error: insertUserError } = await supabase
+                .from('users')
+                .insert([{
+                    id: signUpData.user.id,
+                    email: formData.email,
+                    name: formData.firstName + " " +formData.lastName,
+                    role: "student"
+                }])
+
+            
+            // 2. Insert ข้อมูลนักศึกษา
+            const { error: insertError } = await supabase
+                .from('students')
+                .insert([{
+                    id: signUpData.user.id,
+                    first_name: formData.firstName,
+                    last_name: formData.lastName,
+                    student_id: formData.studentId,
+                    
+                    phone: formData.phone,
+                    birth_date: formData.birthDate,
+                    id_card: formData.idCard,
+                    faculty: formData.faculty,
+                    major: formData.major,
+                    year_level: formData.yearLevel,
+                    enrollment_type: formData.enrollmentType,
+                    address: formData.address,
+                    emergency_contact: formData.emergencyContact,
+                    emergency_phone: formData.emergencyPhone,
+                    profile_image_url: profileImageUrl, // string
+                }])
+
+            if (insertError) {
+                console.error('Insert failed:', insertError.message)
+                return
+            }
+
+            setShowSuccessModal(true)
+        } catch (err) {
+            console.error('เกิดข้อผิดพลาด:', err.message || err)
+        }
     }
+
+
 
     const handleGoBack = () => {
         // Navigate back to student management
@@ -155,8 +231,8 @@ export default function AddStudentPage() {
                                         key={item.name}
                                         href={item.href}
                                         className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${item.current
-                                                ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                             }`}
                                     >
                                         <item.icon
@@ -188,7 +264,7 @@ export default function AddStudentPage() {
 
                                     <div className="md:flex md:items-center md:justify-between">
                                         <div className="min-w-0 flex-1">
-                                            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
+                                            <h2 className="mt-2 text-2xl font-bold  text-gray-900 sm:truncate sm:text-3xl">
                                                 เพิ่มนักศึกษาใหม่
                                             </h2>
                                             <p className="mt-1 text-sm text-gray-500">
@@ -251,7 +327,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.firstName}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -266,7 +342,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.lastName}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -281,7 +357,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.studentId}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -296,7 +372,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.idCard}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -311,7 +387,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.birthDate}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -326,7 +402,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.email}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -341,7 +417,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.phone}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
                                         </div>
@@ -356,7 +432,7 @@ export default function AddStudentPage() {
                                                 rows={3}
                                                 value={formData.address}
                                                 onChange={handleInputChange}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             />
                                         </div>
                                     </div>
@@ -375,7 +451,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.faculty}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 >
                                                     <option value="">เลือกคณะ</option>
                                                     {faculties.map((faculty) => (
@@ -397,7 +473,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.major}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -411,7 +487,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.yearLevel}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 >
                                                     <option value="">เลือกชั้นปี</option>
                                                     {yearLevels.map((year) => (
@@ -432,7 +508,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={formData.enrollmentType}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 >
                                                     <option value="">เลือกประเภทการเรียน</option>
                                                     {enrollmentTypes.map((type) => (
@@ -459,7 +535,7 @@ export default function AddStudentPage() {
                                                     id="emergencyContact"
                                                     value={formData.emergencyContact}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
 
@@ -473,7 +549,7 @@ export default function AddStudentPage() {
                                                     id="emergencyPhone"
                                                     value={formData.emergencyPhone}
                                                     onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                 />
                                             </div>
                                         </div>
