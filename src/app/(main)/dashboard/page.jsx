@@ -222,7 +222,7 @@ export default function DashboardPage() {
                                                 <div className="mt-6 flow-root">
                                                     <ul className="-my-5 divide-y divide-gray-200">
                                                         {students.map((student) => (
-                                                            <li key={student.id} className="py-4">
+                                                            <li  key={student.id} className="py-4 cursor-pointer hover:bg-gray-100" onClick={() => {router.push(`/students/student_profile/${student.id}`)}}>
                                                                 <div className="flex items-center space-x-4">
                                                                     <div className="flex-shrink-0">
                                                                         <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">

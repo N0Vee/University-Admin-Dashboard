@@ -191,7 +191,7 @@ export default function StudentManagementPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white">
                                 {filteredStudents.map((student, index) => (
-                                    <tr key={index}>
+                                    <tr className='cursor-pointer hover:bg-gray-100' key={index} onClick={() => {router.push(`/students/student_profile/${student.id}`)}}>
                                         <td className="px-4 py-3">
                                             <img
                                                 src={student.profile_image_url}
