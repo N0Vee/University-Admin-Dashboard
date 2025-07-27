@@ -2,18 +2,12 @@
 import { supabase } from '@/lib/supabaseClient'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Sidebar from '@/app/components/Sidebar'
+
 import {
-    BellIcon,
     MagnifyingGlassIcon,
-    ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import {
-    AcademicCapIcon,
-    UserGroupIcon,
-    BookOpenIcon,
-    ClipboardDocumentListIcon,
-    ChartBarIcon,
-    CalendarDaysIcon,
     EyeIcon,
     PencilSquareIcon,
     TrashIcon
@@ -45,16 +39,6 @@ export default function StudentManagementPage() {
 
         fetchStudents();
     }, []);
-
-
-    const navigation = [
-        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: false },
-        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon, current: true },
-        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon, current: false },
-        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon, current: false },
-        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon, current: false },
-        { name: 'รายงาน', href: '/report', icon: ChartBarIcon, current: false }
-    ]
 
     const faculties = [
         'วิศวกรรมศาสตร์',
@@ -91,30 +75,7 @@ export default function StudentManagementPage() {
 
             <div className="flex h-screen pt-16">
                 {/* Sidebar */}
-                <div className="hidden md:flex md:w-64 md:flex-col">
-                    <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
-                        <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                            <nav className="mt-5 flex-1 space-y-1 px-2">
-                                {navigation.map((item) => (
-                                    <a
-                                        key={item.name}
-                                        href={item.href}
-                                        className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${item.current
-                                            ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                            }`}
-                                    >
-                                        <item.icon
-                                            className={`mr-3 flex-shrink-0 h-5 w-5 ${item.current ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
-                                                }`}
-                                        />
-                                        {item.name}
-                                    </a>
-                                ))}
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <Sidebar currentPath="/students/student_management" />
 
                 {/* Main Content */}
                 <main className="flex-1 bg-zinc-50 p-6 overflow-auto">
@@ -186,7 +147,6 @@ export default function StudentManagementPage() {
                                     <th className="px-4 py-3 text-left font-medium text-gray-500">คณะ</th>
                                     <th className="px-4 py-3 text-left font-medium text-gray-500">ชั้นปี</th>
                                     <th className="px-4 py-3 text-left font-medium text-gray-500">ประเภท</th>
-                                    <th className="px-4 py-3 text-left font-medium text-gray-500">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white">
@@ -204,17 +164,7 @@ export default function StudentManagementPage() {
                                         <td className="px-4 py-3 text-gray-900">{student.faculty}</td>
                                         <td className="px-4 py-3 text-gray-900">ปี {student.year_level}</td>
                                         <td className="px-4 py-3 text-gray-900">{student.enrollment_type}</td>
-                                        <td className="px-4 py-3 space-x-2">
-                                            <button className="text-indigo-600 hover:underline text-xs">
-                                                <EyeIcon className="h-5 w-5 text-blue" />
-                                            </button>
-                                            <button className="text-yellow-500 hover:underline text-xs">
-                                                <PencilSquareIcon className="h-5 w-5 text-yellow" />
-                                            </button>
-                                            <button className="text-red-500 hover:underline text-xs">
-                                                <TrashIcon className="h-5 w-5 text-red" />
-                                            </button>
-                                        </td>
+                                        
                                     </tr>
                                 ))}
                             </tbody>

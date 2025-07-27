@@ -2,24 +2,19 @@
 import { supabase } from '@/lib/supabaseClient'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Sidebar from '@/app/components/Sidebar'
 
 import {
-    BellIcon,
-    MagnifyingGlassIcon,
-    ChevronDownIcon,
     ArrowLeftIcon,
-    PhotoIcon,
-    XMarkIcon,
     PencilIcon,
     TrashIcon,
-    EyeIcon
 } from '@heroicons/react/24/outline'
 import {
     AcademicCapIcon,
-    UserGroupIcon,
+
     BookOpenIcon,
     ClipboardDocumentListIcon,
-    ChartBarIcon,
+
     CalendarDaysIcon,
     UserIcon,
     PhoneIcon,
@@ -36,16 +31,6 @@ export default function StudentDetailPage() {
     const [student, setStudent] = useState(null)
     const [loading, setLoading] = useState(true)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-
-    const navigation = [
-        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: false },
-        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon, current: true },
-        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon, current: false },
-        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon, current: false },
-        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon, current: false },
-        { name: 'รายงาน', href: '/report', icon: ChartBarIcon, current: false }
-    ]
-
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -109,55 +94,12 @@ export default function StudentDetailPage() {
         return yearTexts[year] || `ปี ${year}`
     }
 
-    // if (loading) {
-    //     return (
-    //         <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-    //             <div className="text-center">
-    //                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-    //                 <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
-    //             </div>
-    //         </div>
-    //     )
-    // }
-
-    // if (!student) {
-    //     return (
-    //         <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-    //             <div className="text-center">
-    //                 <p className="text-gray-600">ไม่พบข้อมูลนักศึกษา</p>
-    //             </div>
-    //         </div>
-    //     )
-    // }
 
     return (
         <div className="min-h-screen bg-zinc-50">
             <div className="flex h-screen pt-16">
                 {/* Sidebar */}
-                <div className="hidden md:flex md:w-64 md:flex-col">
-                    <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
-                        <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                            <nav className="mt-5 flex-1 space-y-1 px-2">
-                                {navigation.map((item) => (
-                                    <a
-                                        key={item.name}
-                                        href={item.href}
-                                        className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${item.current
-                                            ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                            }`}
-                                    >
-                                        <item.icon
-                                            className={`mr-3 flex-shrink-0 h-5 w-5 ${item.current ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
-                                                }`}
-                                        />
-                                        {item.name}
-                                    </a>
-                                ))}
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <Sidebar currentPath="/students/student_management" />
 
                 {/* Main Content */}
                 <div className="flex flex-1 flex-col overflow-hidden">

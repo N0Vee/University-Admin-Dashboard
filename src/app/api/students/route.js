@@ -5,7 +5,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
 
     const orderBy = searchParams.get("orderBy") || "id";
-    const order = searchParams.get("order") || "desc"; // เรียงจากใหม่ไปเก่าเป็นค่า default
+    const order = searchParams.get("order") || "desc";
 
     let query = supabase
         .from("students")

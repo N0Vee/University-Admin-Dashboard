@@ -1,22 +1,11 @@
 import {
     BellIcon,
-    MagnifyingGlassIcon,
     ChevronDownIcon,
-    Cog6ToothIcon,
-    UserCircleIcon,
-    ArrowUpIcon,
-    ArrowDownIcon,
-    EllipsisVerticalIcon
+
 } from '@heroicons/react/24/outline'
 import {
     AcademicCapIcon,
-    UserGroupIcon,
-    BookOpenIcon,
-    ClipboardDocumentListIcon,
-    ChartBarIcon,
-    CalendarDaysIcon
 } from '@heroicons/react/24/solid'
-
 
 export default function Navbar() {
     return (

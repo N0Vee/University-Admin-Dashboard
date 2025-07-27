@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabaseClient'
 import { useEffect, useState } from 'react'
 import { redirect, useRouter } from 'next/navigation'
+import Sidebar from '@/app/components/Sidebar'
 
 import {
     BellIcon,
@@ -66,9 +67,10 @@ export default function DashboardPage() {
     ]
 
     useEffect(() => {
+
         const fetchStudents = async () => {
             try {
-                const res = await fetch("/api/students?orderBy=id&order=asc");
+                const res = await fetch("/api/students?orderBy=id&order=asc",);
 
                 if (!res.ok) {
                     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
@@ -84,7 +86,7 @@ export default function DashboardPage() {
         };
 
         fetchStudents();
-    }, []);
+    }, [router.isReady]);
 
 
 
@@ -95,45 +97,13 @@ export default function DashboardPage() {
         { id: 4, title: 'วันประเมินอาจารย์', date: '2024-09-30', type: 'evaluation' }
     ]
 
-    const navigation = [
-        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon, current: true },
-        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon, current: false },
-        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon, current: false },
-        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon, current: false },
-        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon, current: false },
-        { name: 'รายงาน', href: '/report', icon: ChartBarIcon, current: false }
-    ]
-
     return (
         <div className="min-h-screen bg-zinc-50">
-            
+
 
             <div className="flex h-screen pt-16">
                 {/* Sidebar */}
-                <div className="hidden md:flex md:w-64 md:flex-col">
-                    <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
-                        <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                            <nav className="mt-5 flex-1 space-y-1 px-2">
-                                {navigation.map((item) => (
-                                    <a
-                                        key={item.name}
-                                        href={item.href}
-                                        className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${item.current
-                                            ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                            }`}
-                                    >
-                                        <item.icon
-                                            className={`mr-3 flex-shrink-0 h-5 w-5 ${item.current ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
-                                                }`}
-                                        />
-                                        {item.name}
-                                    </a>
-                                ))}
-                            </nav>
-                        </div>
-                    </div>
-                </div>
+                <Sidebar currentPath="/dashboard" />
 
                 {/* Main Content */}
                 <div className="flex flex-1 flex-col overflow-hidden">
@@ -222,7 +192,7 @@ export default function DashboardPage() {
                                                 <div className="mt-6 flow-root">
                                                     <ul className="-my-5 divide-y divide-gray-200">
                                                         {students.map((student) => (
-                                                            <li  key={student.id} className="py-4 cursor-pointer hover:bg-gray-100" onClick={() => {router.push(`/students/student_profile/${student.id}`)}}>
+                                                            <li key={student.id} className="py-4 cursor-pointer hover:bg-gray-100" onClick={() => { router.push(`/students/student_profile/${student.id}`) }}>
                                                                 <div className="flex items-center space-x-4">
                                                                     <div className="flex-shrink-0">
                                                                         <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
