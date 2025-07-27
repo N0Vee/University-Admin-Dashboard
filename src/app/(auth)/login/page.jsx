@@ -32,49 +32,43 @@ export default function LoginPage() {
 
         const { email, password } = formData
 
-        const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        })
+        let data = null
 
-        setIsLoading(false)
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            })
 
-        if (supabaseError) {
-            setError(supabaseError.message)
+            data = await res.json()
+
+        } catch (error) {
+            console.error(error)
+            setError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์')
+            setIsLoading(false)
             return
         }
 
-        if (!data.session) {
+        setIsLoading(false)
+
+        if (!data?.session) {
             setError('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่')
             return
         }
 
-        const userId = data.user.id
-
-        try {
-            const { data: userData, error } = await supabase
-                .from('users')
-                .select('role')
-                .eq('id', userId)
-                .single()
-
-            if (error || !userData) {
-                setError('ไม่สามารถดึงข้อมูลผู้ใช้ได้')
-                return
-            }
-
-            const userRole = userData.role
-            if (userRole === 'admin') {
-                router.push('/dashboard')
-            } else if (userRole === 'student') {
-                router.push('/student')
-            }
-        } catch (err) {
-            console.error('เกิดข้อผิดพลาด', err)
-            setError('เกิดข้อผิดพลาดขณะโหลดข้อมูล')
+        if (data?.role === 'admin') {
+            router.push('/dashboard')
+        } else if (data?.role === 'student') {
+            router.push('/student')
+        } else {
+            setError('บทบาทผู้ใช้ไม่ถูกต้อง')
         }
 
     }
+
 
     return (
         <div className="min-h-screen bg-zinc-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
