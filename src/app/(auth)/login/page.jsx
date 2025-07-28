@@ -54,11 +54,6 @@ export default function LoginPage() {
 
         setIsLoading(false)
 
-        if (!data?.session) {
-            setError('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่')
-            return
-        }
-
         if (data?.role === 'admin') {
             router.push('/dashboard')
         } else if (data?.role === 'student') {

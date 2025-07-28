@@ -44,6 +44,12 @@ export default function EditStudentPage() {
         const fetchStudent = async () => {
             try {
                 const res = await fetch(`/api/student/${id}`)
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        router.replace('/login')
+                    }
+                    throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+                }
                 const data = await res.json()
                 setStudentData(data)
             } catch (error) {

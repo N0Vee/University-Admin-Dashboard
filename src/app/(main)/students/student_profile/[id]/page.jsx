@@ -58,6 +58,12 @@ export default function StudentDetailPage() {
     const confirmDelete = async () => {
         try {
             const res = await fetch(`/api/student/delete/${id}`)
+            if (!res.ok) {
+                    if (res.status === 401) {
+                        router.replace('/login')
+                    }
+                    throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+                }
             console.log('Student deleted')
             router.push('/students/student_management')
         } catch (error) {

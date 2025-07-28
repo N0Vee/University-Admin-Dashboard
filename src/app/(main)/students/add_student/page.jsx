@@ -154,7 +154,6 @@ export default function AddStudentPage() {
 
             let profileImageUrl = null
 
-            // 1. อัปโหลดรูปภาพก่อน (ถ้ามี)
             if (formData.profileImage) {
                 const file = formData.profileImage
                 const fileExt = file.name.split('.').pop()
@@ -168,7 +167,7 @@ export default function AddStudentPage() {
                     throw new Error('อัปโหลดรูปภาพไม่สำเร็จ: ' + uploadError.message)
                 }
 
-                // ได้ path แล้ว สร้าง public URL
+                
                 const { data: publicUrlData } = supabase
                     .storage
                     .from('img.students')

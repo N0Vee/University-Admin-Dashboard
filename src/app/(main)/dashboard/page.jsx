@@ -74,11 +74,13 @@ export default function DashboardPage() {
                 const res = await fetch("/api/students?orderBy=id&order=asc",);
 
                 if (!res.ok) {
+                    if (res.status === 401) {
+                        router.replace('/login')
+                    }
                     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
                 }
 
                 const data = await res.json();
-
                 setStudents(data);
                 setStudentsCount(data.length);
             } catch (error) {
@@ -88,7 +90,7 @@ export default function DashboardPage() {
 
         fetchStudents();
 
-    }, [router.isReady]);
+    }, []);
 
 
 

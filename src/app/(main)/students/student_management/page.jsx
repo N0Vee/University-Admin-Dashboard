@@ -28,9 +28,12 @@ export default function StudentManagementPage() {
                 const res = await fetch("/api/students");
 
                 if (!res.ok) {
+                    if (res.status === 401) {
+                        router.replace('/login')
+                    }
                     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
                 }
-
+                
                 const data = await res.json();
                 setStudents(data);
             } catch (error) {

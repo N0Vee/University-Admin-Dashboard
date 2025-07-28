@@ -24,19 +24,26 @@ export async function POST(request) {
             .select('role')
             .eq('id', userId)
             .single()
-
-        if (userError || !userData) {
-            setError('ไม่สามารถดึงข้อมูลผู้ใช้ได้')
-            return
+        
+        if (userError) {
+            return NextResponse.json({ error: 'ดึง role ไม่สำเร็จ' }, { status: 400 })
         }
 
         const userRole = userData.role
 
-        return NextResponse.json({
-            session: data.session,
-            user: data.user,
+
+        const res = NextResponse.json({
             role: userRole
         })
+        res.cookies.set('access_token', data.session.access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'Strict', 
+            maxAge: data.session.expires_in,
+        });
+
+        return res
+
     } catch (err) {
         return NextResponse.json({ error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' }, { status: 500 })
     }
