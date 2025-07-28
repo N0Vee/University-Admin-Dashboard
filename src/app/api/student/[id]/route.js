@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabase } from '@/lib/supabaseClient'
 
 export async function GET(req, { params }) {
-    const { id } = params;
+    const { id } = await params;
     
     let query = supabase
         .from("students")

@@ -1,5 +1,6 @@
 'use client'
 import { supabase } from '@/lib/supabaseClient'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'
@@ -151,12 +152,16 @@ export default function StudentManagementPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white">
                                 {filteredStudents.map((student, index) => (
-                                    <tr className='cursor-pointer hover:bg-gray-100' key={index} onClick={() => {router.push(`/students/student_profile/${student.id}`)}}>
+                                    <tr className='cursor-pointer hover:bg-gray-100' key={index} onClick={() => { router.push(`/students/student_profile/${student.id}`) }}>
                                         <td className="px-4 py-3">
-                                            <img
+                                            <Image
+                                                width={10}
+                                                height={10}
+                                                unoptimized
+                                                className='h-10 w-10 rounded-full'
+                                                key={student.profile_image_url}
                                                 src={student.profile_image_url}
-                                                alt="profile"
-                                                className="h-10 w-10 rounded-full object-cover"
+                                                alt=""
                                             />
                                         </td>
                                         <td className="px-4 py-3 text-gray-900">{student.student_id}</td>
@@ -164,7 +169,7 @@ export default function StudentManagementPage() {
                                         <td className="px-4 py-3 text-gray-900">{student.faculty}</td>
                                         <td className="px-4 py-3 text-gray-900">ปี {student.year_level}</td>
                                         <td className="px-4 py-3 text-gray-900">{student.enrollment_type}</td>
-                                        
+
                                     </tr>
                                 ))}
                             </tbody>

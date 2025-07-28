@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useEffect, useState } from 'react'
 import { redirect, useRouter } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'
+import Image from 'next/image'
 
 import {
     BellIcon,
@@ -86,6 +87,7 @@ export default function DashboardPage() {
         };
 
         fetchStudents();
+
     }, [router.isReady]);
 
 
@@ -197,7 +199,15 @@ export default function DashboardPage() {
                                                                     <div className="flex-shrink-0">
                                                                         <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
                                                                             <span className="text-sm font-medium text-white ">
-                                                                                <img className=' h-10 w-10 rounded-full' src={student.profile_image_url} alt="" />
+                                                                                <Image
+                                                                                    width={10}
+                                                                                    height={10}
+                                                                                    unoptimized
+                                                                                    className='h-10 w-10 rounded-full'
+                                                                                    key={student.profile_image_url}
+                                                                                    src={student.profile_image_url} 
+                                                                                    alt="" 
+                                                                                />
                                                                             </span>
                                                                         </div>
                                                                     </div>

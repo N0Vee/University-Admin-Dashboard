@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabaseClient'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 import Sidebar from '@/app/components/Sidebar'
 
 import {
@@ -56,11 +57,7 @@ export default function StudentDetailPage() {
 
     const confirmDelete = async () => {
         try {
-            const { error } = await supabase
-                .from('students')
-                .delete()
-                .eq('id', student.id)
-
+            const res = await fetch(`/api/student/delete/${id}`)
             console.log('Student deleted')
             router.push('/students/student_management')
         } catch (error) {
@@ -122,7 +119,7 @@ export default function StudentDetailPage() {
                                         </div>
                                         <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
                                             <button
-                                                onClick={() => router.push(`/students/student_edit/${student.id}`)}
+                                                onClick={() => router.push(`/students/edit_student/${student.id}`)}
                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             >
                                                 <PencilIcon className="h-4 w-4 mr-2" />
@@ -149,18 +146,25 @@ export default function StudentDetailPage() {
                                                 <div className="h-24 w-24 rounded-full bg-gray-200 border-4 border-gray-200 animate-pulse"></div>
                                             ) : (
                                                 student.profile_image_url ? (
-                                                    <img
-                                                        className="h-24 w-24 object-cover rounded-full border-4 border-gray-200"
+                                                    <Image
+                                                        width={24}
+                                                        height={24}
+                                                        unoptimized
+                                                        className='h-24 w-24 object-cover rounded-full border-4 border-gray-200'
+                                                        key={student.profile_image_url}
                                                         src={student.profile_image_url}
-                                                        alt="Profile"
+                                                        alt={student.profile_image_url}
                                                     />
+
                                                 ) : (
+
                                                     <div className="h-24 w-24 rounded-full bg-indigo-100 border-4 border-gray-200 flex items-center justify-center">
                                                         <UserIcon className="h-12 w-12 text-indigo-600" />
                                                     </div>
                                                 )
                                             )}
                                         </div>
+
                                         <div className="flex-1">
                                             {loading ? (
 
