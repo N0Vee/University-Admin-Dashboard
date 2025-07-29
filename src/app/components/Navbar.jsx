@@ -19,7 +19,7 @@ export default function Navbar() {
                                     <AcademicCapIcon className="h-6 w-6 text-white" />
                                 </div>
                                 <span className="ml-3 text-xl font-semibold text-gray-900">
-                                    Student Management
+                                    University Management
                                 </span>
                             </div>
                         </div>

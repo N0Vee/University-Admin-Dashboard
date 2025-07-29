@@ -107,11 +107,11 @@ export default function StudentDetailPage() {
                                 {/* Page header */}
                                 <div className="mb-6">
                                     <button
-                                        onClick={() => router.push("/students/student_management")}
+                                        onClick={() => router.back()}
                                         className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
                                     >
                                         <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                                        กลับไปยังจัดการนักศึกษา
+                                        กลับ
                                     </button>
 
                                     <div className="md:flex md:items-center md:justify-between">

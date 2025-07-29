@@ -28,6 +28,7 @@ export default function DashboardPage() {
     const router = useRouter()
     const [students, setStudents] = useState([]);
     const [studentsCount, setStudentsCount] = useState(0)
+    const [coursesCount, setCoursesCount] = useState(0)
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
 
@@ -36,32 +37,24 @@ export default function DashboardPage() {
         {
             name: 'นักศึกษาทั้งหมด',
             value: studentsCount,
-            change: '',
-            changeType: 'positive',
             icon: UserGroupIcon,
             color: 'bg-indigo-500'
         },
         {
             name: 'นักศึกษาใหม่',
             value: studentsCount,
-            change: '',
-            changeType: 'positive',
             icon: AcademicCapIcon,
             color: 'bg-emerald-500'
         },
         {
             name: 'วิชาที่เปิดสอน',
-            value: '0',
-            change: '',
-            changeType: '',
+            value: coursesCount,
             icon: BookOpenIcon,
             color: 'bg-amber-500'
         },
         {
             name: 'งานที่รอตรวจ',
             value: '0',
-            change: '',
-            changeType: 'negative',
             icon: ClipboardDocumentListIcon,
             color: 'bg-rose-500'
         }
@@ -91,6 +84,26 @@ export default function DashboardPage() {
         fetchStudents();
 
     }, []);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const res = await fetch('/api/courses')
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        router.replace('/login')
+                    }
+                    throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+                }
+                const data = await res.json()
+                setCoursesCount(data.length)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        fetchCourses()
+    }, [])
 
 
 
@@ -159,20 +172,6 @@ export default function DashboardPage() {
                                                 </dt>
                                                 <dd className="ml-16 flex items-baseline">
                                                     <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
-                                                    <p
-                                                        className={`ml-2 flex items-baseline text-sm font-semibold ${item.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                                                            }`}
-                                                    >
-                                                        {item.changeType === 'positive' ? (
-                                                            <ArrowUpIcon className="h-4 w-4 flex-shrink-0 self-center" />
-                                                        ) : (
-                                                            <ArrowDownIcon className="h-4 w-4 flex-shrink-0 self-center" />
-                                                        )}
-                                                        <span className="sr-only">
-                                                            {item.changeType === 'positive' ? 'Increased' : 'Decreased'} by
-                                                        </span>
-                                                        {item.change}
-                                                    </p>
                                                 </dd>
                                             </div>
                                         ))}

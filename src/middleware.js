@@ -6,7 +6,6 @@ export function middleware(request) {
     const isLoginApi = request.nextUrl.pathname === '/api/auth/login'
 
     if (isLoginApi) {
-
         return NextResponse.next()
     }
 
@@ -18,14 +17,11 @@ export function middleware(request) {
 
 
     const payload = verifyJwt(token)
-    console.log(payload)
     if (!payload) {
         const response = NextResponse.json({ error: 'Invalid Access Token' }, { status: 401 });
         response.cookies.delete('access_token')
         return response
     }
-
-    console.log('Pass!')
 
     const response = NextResponse.next();
     return response;

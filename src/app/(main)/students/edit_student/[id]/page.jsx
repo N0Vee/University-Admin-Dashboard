@@ -1,5 +1,4 @@
 'use client'
-import { supabase } from '@/lib/supabaseClient'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'

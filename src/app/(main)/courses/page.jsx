@@ -252,10 +252,6 @@ export default function CourseManagementPage() {
                                                 </select>
                                             </div>
 
-                                            <button className="mt-3 sm:mt-0 sm:ml-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                                                <FunnelIcon className="h-4 w-4 mr-2" />
-                                                ตัวกรองเพิ่มเติม
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -332,12 +328,15 @@ export default function CourseManagementPage() {
                                                                 <div className="text-sm text-gray-900">
                                                                     {course.semester}
                                                                 </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    {course.schedule}
+                                                                <div className="text-sm text-gray-500 space-y-1">
+                                                                    {course.schedule.map((s, i) => (
+                                                                        <div key={i}>
+                                                                            {s.day} {s.time}
+                                                                            <div className="text-xs text-gray-400">ห้อง {s.room}</div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                                <div className="text-xs text-gray-400">
-                                                                    ห้อง {course.room}
-                                                                </div>
+
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(course.status)}`}>
