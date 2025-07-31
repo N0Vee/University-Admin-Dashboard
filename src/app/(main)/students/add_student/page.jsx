@@ -17,6 +17,7 @@ export default function AddStudentPage() {
     const [studentId, setStudentId] = useState("")
     const [generatedEmail, setGeneratedEmail] = useState("")
     const [title, setTitle] = useState("")
+    const [error, setError] = useState("")
 
 
     const [formData, setFormData] = useState({
@@ -150,7 +151,10 @@ export default function AddStudentPage() {
                 email: generatedEmail,
                 password: formData.idCard,
             })
-            console.log(signUpData.user.id)
+            if (signUpError) {
+                setError("SignUp Error : " + signUpError.message)
+                return
+            }
 
             let profileImageUrl = null
 
@@ -164,10 +168,11 @@ export default function AddStudentPage() {
                     .upload(filePath, file)
 
                 if (uploadError) {
-                    throw new Error('อัปโหลดรูปภาพไม่สำเร็จ: ' + uploadError.message)
+                    setError("Upload Image Error : " + uploadError.message)
+                    return
                 }
 
-                
+
                 const { data: publicUrlData } = supabase
                     .storage
                     .from('img.students')
@@ -185,8 +190,11 @@ export default function AddStudentPage() {
                     role: "student"
                 }])
 
+            if (insertUserError) {
+                setError("Insert User Error : " + insertUserError.message)
+                return
+            }
 
-            // 2. Insert ข้อมูลนักศึกษา
             const { error: insertError } = await supabase
                 .from('students')
                 .insert([{
@@ -213,13 +221,14 @@ export default function AddStudentPage() {
                 }])
 
             if (insertError) {
-                console.error('Insert failed:', insertError.message)
+                setError("Insert Student Error : " + insertError.message)
                 return
             }
 
             setShowSuccessModal(true)
         } catch (err) {
-            console.error('เกิดข้อผิดพลาด:', err.message || err)
+            setError("Internal Server Error : ", err)
+            return
         }
     }
 
@@ -327,8 +336,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={title}
                                                     disabled
-                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                >
+                                                    className="text-gray-900 bg-gray-100 py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm cursor-not-allowed opacity-60 sm:text-sm">
                                                     <option value="">Choose title</option>
                                                     <option value="Mr.">Mr.</option>
                                                     <option value="Mrs.">Mrs.</option>
@@ -407,13 +415,13 @@ export default function AddStudentPage() {
                                                     required
                                                     value={studentId}
                                                     disabled
-                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-gray-900 bg-gray-50 py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm cursor-not-allowed opacity-75 sm:text-sm"
                                                 />
                                             </div>
 
                                             <div>
                                                 <label htmlFor="idCard" className="block text-sm font-medium text-gray-700">
-                                                    เลขบัตรประชาชน *
+                                                    เลขบัตรประชาชน (รหัสผ่านสำหรับล็อคอิน) *
                                                 </label>
                                                 <input
                                                     type="text"
@@ -452,7 +460,7 @@ export default function AddStudentPage() {
                                                     required
                                                     value={generatedEmail}
                                                     disabled
-                                                    className="text-black py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    className="text-gray-900 bg-gray-100 py-2 px-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm cursor-not-allowed opacity-60 sm:text-sm"
                                                 />
                                             </div>
 
@@ -605,6 +613,13 @@ export default function AddStudentPage() {
                                         </div>
                                     </div>
 
+                                    {error && (
+                                        <div className="bg-red-500 text-white shadow rounded-lg p-4 mt-4">
+                                            <p className="font-semibold">เกิดข้อผิดพลาด:</p>
+                                            <p>{error}</p>
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-end space-x-3 pt-6">
                                         <button
                                             type="button"
@@ -621,6 +636,9 @@ export default function AddStudentPage() {
                                             เพิ่มนักศึกษา
                                         </button>
                                     </div>
+
+
+
                                 </div>
                             </div>
                         </div>

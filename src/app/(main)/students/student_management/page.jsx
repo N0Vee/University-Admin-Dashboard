@@ -25,7 +25,7 @@ export default function StudentManagementPage() {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const res = await fetch("/api/students");
+                const res = await fetch("/api/students?order=asc");
 
                 if (!res.ok) {
                     if (res.status === 401) {

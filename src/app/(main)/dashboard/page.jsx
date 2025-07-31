@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
         const fetchStudents = async () => {
             try {
-                const res = await fetch("/api/students?orderBy=id&order=asc",);
+                const res = await fetch("/api/students?orderBy=id&order=desc",);
 
                 if (!res.ok) {
                     if (res.status === 401) {

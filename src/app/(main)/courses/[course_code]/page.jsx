@@ -30,6 +30,7 @@ import {
     CheckBadgeIcon,
     PlusIcon
 } from '@heroicons/react/24/solid'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function CourseDetailPage() {
     const router = useRouter()
@@ -54,10 +55,12 @@ export default function CourseDetailPage() {
             }
 
         }
+
         fetchCourse()
     }, [course_code])
 
     useEffect(() => {
+        if (!course?.instructor) return;
         const fetchInstructor = async () => {
             try {
                 const res = await fetch(`/api/instructor/${course.instructor}`)
@@ -76,10 +79,10 @@ export default function CourseDetailPage() {
             if (!course?.course_code) return;
 
             try {
-                
+
                 const res = await fetch(`/api/enrollments?eq=${course.course_code}`);
                 const enrollments = await res.json();
-                
+
                 const studentList = [];
 
                 for (const enrollment of enrollments) {
@@ -89,14 +92,37 @@ export default function CourseDetailPage() {
                 }
 
                 setStudents(studentList);
+
             } catch (error) {
                 console.error("เกิดข้อผิดพลาดในการโหลดนักเรียน:", error);
             }
         };
 
+
+
+
         fetchEnrollments();
     }, [course?.course_code]);
-    
+
+    useEffect(() => {
+        if (students.length === 0 || !course.course_code) return;
+
+        const updateStudentEnrolled = async () => {
+            try {
+                const { error } = await supabase
+                    .from('courses')
+                    .update({ students_enrolled: students.length })
+                    .eq('course_code', course.course_code)
+
+                if (error) console.error(error)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        updateStudentEnrolled()
+    }, [students.length, course.course_code])
+
 
     // Mock announcements data
     const mockAnnouncements = [
