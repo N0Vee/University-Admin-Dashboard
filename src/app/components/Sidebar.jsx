@@ -9,7 +9,7 @@ import {
 export default function Sidebar({ currentPath }) {
     const navigation = [
         { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
-        { name: 'จัดการนักศึกษา', href: '/students/student_management', icon: UserGroupIcon },
+        { name: 'จัดการนักศึกษา', href: '/students', icon: UserGroupIcon },
         { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
         { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon },
         { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon },

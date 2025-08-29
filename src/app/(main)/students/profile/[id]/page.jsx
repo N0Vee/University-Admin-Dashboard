@@ -65,7 +65,7 @@ export default function StudentDetailPage() {
                     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
                 }
             console.log('Student deleted')
-            router.push('/students/student_management')
+            router.push('/students')
         } catch (error) {
             console.error('Error deleting student:', error)
         }
@@ -97,7 +97,7 @@ export default function StudentDetailPage() {
         <div className="min-h-screen bg-zinc-50">
             <div className="flex h-screen pt-16">
                 {/* Sidebar */}
-                <Sidebar currentPath="/students/student_management" />
+                <Sidebar currentPath="/students" />
 
                 {/* Main Content */}
                 <div className="flex flex-1 flex-col overflow-hidden">
@@ -125,7 +125,7 @@ export default function StudentDetailPage() {
                                         </div>
                                         <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
                                             <button
-                                                onClick={() => router.push(`/students/edit_student/${student.id}`)}
+                                                onClick={() => router.push(`/students/edit/${student.id}`)}
                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             >
                                                 <PencilIcon className="h-4 w-4 mr-2" />

@@ -79,12 +79,10 @@ export default function CourseDetailPage() {
             if (!course?.course_code) return;
 
             try {
-
                 const res = await fetch(`/api/enrollments?eq=${course.course_code}`);
                 const enrollments = await res.json();
 
                 const studentList = [];
-
                 for (const enrollment of enrollments) {
                     const studentRes = await fetch(`/api/studentByStudentId/${enrollment.student_id}`);
                     const studentData = await studentRes.json();
@@ -97,10 +95,6 @@ export default function CourseDetailPage() {
                 console.error("เกิดข้อผิดพลาดในการโหลดนักเรียน:", error);
             }
         };
-
-
-
-
         fetchEnrollments();
     }, [course?.course_code]);
 

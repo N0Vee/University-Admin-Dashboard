@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/24/solid'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
 
 export default function LoginPage() {
     const router = useRouter()

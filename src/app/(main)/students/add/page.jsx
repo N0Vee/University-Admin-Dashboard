@@ -55,7 +55,6 @@ export default function AddStudentPage() {
   const yearLevels = [1, 2, 3, 4, 5, 6]
   const enrollmentTypes = ['ปกติ', 'กศ.บป.', 'นานาชาติ', 'พิเศษ']
 
-  // เพิ่มฟังก์ชันตรวจสอบข้อมูล
   const validateForm = () => {
     const errors = []
 
@@ -66,14 +65,12 @@ export default function AddStudentPage() {
     if (!formData.firstNameEng) errors.push('กรุณากรอกชื่อ (ภาษาอังกฤษ)')
     if (!formData.lastNameEng) errors.push('กรุณากรอกนามสกุล (ภาษาอังกฤษ)')
     
-    // ตรวจสอบเลขบัตรประชาชน
     if (!formData.idCard) {
       errors.push('กรุณากรอกเลขบัตรประชาชน')
     } else if (!/^\d{13}$/.test(formData.idCard)) {
       errors.push('เลขบัตรประชาชนต้องมี 13 หลัก')
     }
 
-    // ตรวจสอบเบอร์โทรศัพท์
     if (!formData.phone) {
       errors.push('กรุณากรอกเบอร์โทรศัพท์')
     } else if (!/^[0-9]{10}$/.test(formData.phone)) {
@@ -190,7 +187,6 @@ export default function AddStudentPage() {
       return
     }
 
-    // ตรวจสอบประเภทไฟล์
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
       setError('รองรับเฉพาะไฟล์ JPG, PNG, GIF เท่านั้น')
@@ -213,7 +209,6 @@ export default function AddStudentPage() {
     setError('')
 
     try {
-      // ขั้นตอนที่ 1: สร้างบัญชี auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.idCard,
@@ -225,7 +220,6 @@ export default function AddStudentPage() {
 
       let profileImageUrl = null
 
-      // ขั้นตอนที่ 2: อัปโหลดรูปภาพ (ถ้ามี)
       if (formData.profileImage) {
         const file = formData.profileImage
         const fileExt = file.name.split('.').pop()
@@ -246,7 +240,6 @@ export default function AddStudentPage() {
         profileImageUrl = publicUrlData.publicUrl
       }
 
-      // ขั้นตอนที่ 3: เพิ่มข้อมูลในตาราง users
       const { error: insertUserError } = await supabase
         .from('users')
         .insert([{
@@ -260,7 +253,6 @@ export default function AddStudentPage() {
         throw new Error(`การเพิ่มข้อมูลผู้ใช้ล้มเหลว: ${insertUserError.message}`)
       }
 
-      // ขั้นตอนที่ 4: เพิ่มข้อมูลในตาราง students
       const { error: insertError } = await supabase
         .from('students')
         .insert([{
@@ -305,7 +297,7 @@ export default function AddStudentPage() {
 
       <div className="flex h-screen pt-16">
         {/* Sidebar */}
-        <Sidebar currentPath="/students/student_management" />
+        <Sidebar currentPath="/students" />
 
         {/* Main Content */}
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -315,7 +307,7 @@ export default function AddStudentPage() {
                 {/* Page header */}
                 <div className="mb-6">
                   <button
-                    onClick={() => router.push("/students/student_management")}
+                    onClick={() => router.back()}
                     className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
                   >
                     <ArrowLeftIcon className="h-4 w-4 mr-2" />
