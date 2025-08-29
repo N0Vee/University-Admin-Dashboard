@@ -1,26 +1,33 @@
 import { NextResponse } from "next/server";
-import { supabase } from '@/lib/supabaseClient';
+import { cookies } from "next/headers";
+import { createSupabaseClientWithAuth } from '@/lib/supabaseClientWithAuth'
+
+
 
 export async function GET(req, { params }) {
-    const { instructor_code } = await params;
+  const { instructor_code } = await params;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
 
-    if (!instructor_code) {
-        return NextResponse.json({ error: "Missing instructor_code" }, { status: 400 });
-    }
+  const supabase = await createSupabaseClientWithAuth(token);
 
-    const { data, error } = await supabase
-        .from("instructors")
-        .select("*")
-        .eq("instructor_code", instructor_code)
-        .single();
+  if (!instructor_code) {
+    return NextResponse.json({ error: "Missing instructor_code" }, { status: 400 });
+  }
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  const { data, error } = await supabase
+    .from("instructors")
+    .select("*")
+    .eq("instructor_code", instructor_code)
+    .single();
 
-    if (!data) {
-        return NextResponse.json({ error: "Instructor not found" }, { status: 404 });
-    }
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-    return NextResponse.json(data);
+  if (!data) {
+    return NextResponse.json({ error: "Instructor not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(data);
 }

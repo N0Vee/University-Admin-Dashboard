@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import { supabase } from '@/lib/supabaseClient'
+import { cookies } from "next/headers";
+import { createSupabaseClientWithAuth } from '@/lib/supabaseClientWithAuth'
+
 
 export async function GET(req) {
-    
-    const {data, error: coursesError} = await supabase
-        .from('courses')
-        .select('*')
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
 
-    if (coursesError) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  const supabase = await createSupabaseClientWithAuth(token);
 
-    return NextResponse.json(data);
+  const { data, error: coursesError } = await supabase
+    .from('courses')
+    .select('*')
+
+  if (coursesError) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
 }

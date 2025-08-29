@@ -1,22 +1,28 @@
 import { NextResponse } from "next/server";
-import { supabase } from '@/lib/supabaseClient'
+import { cookies } from "next/headers";
+import { createSupabaseClientWithAuth } from '@/lib/supabaseClientWithAuth'
+
 
 export async function GET(req, { params }) {
-    const { course_code } = await params;
+  const { course_code } = await params;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
 
-    if (!course_code) {
-        return NextResponse.json({ error: "Missing course_code" }, { status: 400 });
-    }
+  const supabase = await createSupabaseClientWithAuth(token);
 
-    const { data, error } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("course_code", course_code)
-        .single();
+  if (!course_code) {
+    return NextResponse.json({ error: "Missing course_code" }, { status: 400 });
+  }
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("course_code", course_code)
+    .single();
 
-    return NextResponse.json(data);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
 }
