@@ -11,9 +11,11 @@ import {
   UserGroupIcon,
   PlusIcon,
   XMarkIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
 import {
-  CheckCircleIcon
+  CheckCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/solid'
 
 export default function CourseEditPage({ params }) {
@@ -74,6 +76,7 @@ export default function CourseEditPage({ params }) {
 
 
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const faculties = [
     'วิศวกรรมศาสตร์',
@@ -196,6 +199,31 @@ export default function CourseEditPage({ params }) {
     } catch (err) {
       console.error('Error updating course:', err)
       setError(err.message || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const { course_code } = await params
+      const response = await fetch(`${process.env.NEXT_PUBLIC_WEBSITE_URL}/api/courses/delete/${course_code}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete course')
+      }
+
+      router.push('/courses')
+
+    } catch (err) {
+      console.error('Error deleting course:', err)
+      setError(err.message || 'เกิดข้อผิดพลาดในการลบรายวิชา')
+      setShowDeleteModal(false)
     } finally {
       setIsLoading(false)
     }
@@ -589,34 +617,45 @@ export default function CourseEditPage({ params }) {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-6">
+                <div className="flex justify-between space-x-3 pt-6">
                   <button
                     type="button"
-                    onClick={() => router.back()}
-                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    ยกเลิก
+                    <TrashIcon className="h-4 w-4 mr-2" />
+                    ลบรายวิชา
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${isLoading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                      } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        กำลังบันทึก...
-                      </>
-                    ) : (
-                      'บันทึกการแก้ไข'
-                    )}
-                  </button>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => router.back()}
+                      className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${isLoading
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                        } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          กำลังบันทึก...
+                        </>
+                      ) : (
+                        'บันทึกการแก้ไข'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -646,6 +685,51 @@ export default function CourseEditPage({ params }) {
                   className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
                 >
                   ไปที่จัดการรายวิชา
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <ExclamationTriangleIcon className="mx-auto h-16 w-16 text-red-600" />
+              <h3 className="text-lg font-medium text-gray-900 mt-4">ยืนยันการลบรายวิชา</h3>
+              <p className="text-sm text-gray-500 mt-2">
+                คุณแน่ใจหรือไม่ที่จะลบรายวิชา "{formData.courseName}" <br />
+                การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              </p>
+              <div className="flex justify-center space-x-3 mt-6">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700'
+                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      กำลังลบ...
+                    </>
+                  ) : (
+                    'ลบรายวิชา'
+                  )}
                 </button>
               </div>
             </div>
