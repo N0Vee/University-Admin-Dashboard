@@ -1,23 +1,66 @@
+'use client'
+import { useState, useEffect } from 'react'
 import {
     UserGroupIcon,
     BookOpenIcon,
     ClipboardDocumentListIcon,
     ChartBarIcon,
     CalendarDaysIcon,
+    UserIcon,
 } from '@heroicons/react/24/solid'
 
 export default function Sidebar({ currentPath }) {
-    const navigation = [
-        { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
-        { name: 'จัดการนักศึกษา', href: '/students', icon: UserGroupIcon },
-        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
-        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon },
-        { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon },
-        { name: 'รายงาน', href: '/report', icon: ChartBarIcon },
-    ].map(item => ({
-        ...item,
-        current: item.href === currentPath,
-    }))
+    const [userRole, setUserRole] = useState(null)
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            try {
+                const response = await fetch('/api/auth/get-role')
+                const data = await response.json()
+                setUserRole(data.role)
+            } catch (error) {
+                console.error('Error fetching user role:', error)
+            }
+        }
+        fetchUserRole()
+    }, [])
+
+    // Define navigation items based on role
+    const getNavigationItems = () => {
+        const baseItems = []
+
+        if (userRole === 'admin') {
+            // Admin can see everything
+            baseItems.push(
+                { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
+                { name: 'จัดการนักศึกษา', href: '/students', icon: UserGroupIcon },
+                { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
+                { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon },
+                { name: 'ปฏิทินกิจกรรม', href: '/calendar', icon: CalendarDaysIcon },
+                { name: 'รายงาน', href: '/report', icon: ChartBarIcon }
+            )
+        } else if (userRole === 'instructor') {
+            // Instructor can only manage courses
+            baseItems.push(
+                { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
+                { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon }
+            )
+        } else if (userRole === 'student') {
+            // Student can only view courses and profile
+            baseItems.push(
+                { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
+                { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
+                { name: 'โปรไฟล์', href: '/profile', icon: UserIcon }
+            )
+        }
+
+        return baseItems.map(item => ({
+            ...item,
+            current: item.href === currentPath,
+        }))
+    }
+
+    const navigation = getNavigationItems()
 
     return (
         <div className="hidden md:flex md:w-64 md:flex-col">

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
   BellIcon,
   ArrowRightStartOnRectangleIcon
@@ -10,18 +11,40 @@ import {
 
 import { useRouter } from 'next/navigation'
 
-
-
 export default function Navbar() {
   const router = useRouter()
+  const [userRole, setUserRole] = useState(null)
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch('/api/auth/get-role')
+        const data = await response.json()
+        setUserRole(data.role)
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+      }
+    }
+    fetchUserRole()
+  }, [])
 
   const handleLogout = () => {
     fetch('/api/auth/logout', {
       method: 'POST',
     })
     router.push('/login')
-
   }
+
+  const getRoleDisplay = () => {
+    switch (userRole) {
+      case 'admin': return { label: 'Admin', initials: 'AD', color: 'bg-red-500' }
+      case 'instructor': return { label: 'Instructor', initials: 'IN', color: 'bg-blue-500' }
+      case 'student': return { label: 'Student', initials: 'ST', color: 'bg-green-500' }
+      default: return { label: 'User', initials: 'US', color: 'bg-gray-500' }
+    }
+  }
+
+  const roleInfo = getRoleDisplay()
 
   return (
     <>
@@ -52,16 +75,14 @@ export default function Navbar() {
               <div className="relative">
                 <div className="flex max-w-xs items-center rounded-full bg-white text-sm">
                   <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">AD</span>
+                  <div className={`h-8 w-8 rounded-full ${roleInfo.color} flex items-center justify-center`}>
+                    <span className="text-xs font-medium text-white">{roleInfo.initials}</span>
                   </div>
-                  <span className="ml-3 text-sm font-medium text-gray-700">Admin</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">{roleInfo.label}</span>
                   <button className='hover:bg-gray-100 p-1 rounded-full cursor-pointer' onClick={() => handleLogout()}>
                     <ArrowRightStartOnRectangleIcon className="ml-2 h-4 w-4 text-red-800" />
                   </button>
-
                 </div>
-
               </div>
             </div>
           </div>

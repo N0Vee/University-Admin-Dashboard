@@ -106,9 +106,12 @@ export default function StudentManagementPage() {
         <main className="flex-1 bg-zinc-50 p-6 overflow-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">จัดการนักศึกษา</h1>
-            <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
-              เพิ่มนักศึกษา
-            </button>
+            {/* Only show "Add Student" button for admin */}
+            {role === 'admin' && (
+              <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+                เพิ่มนักศึกษา
+              </button>
+            )}
           </div>
 
           {/* Filters */}

@@ -196,14 +196,17 @@ useEffect(() => {
                     >
                       ส่งออกข้อมูล
                     </button>
-                    <button
-                      type="button"
-                      className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                      onClick={() => router.push('/courses/add')}
-                    >
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      เพิ่มวิชาใหม่
-                    </button>
+                    {/* Only show "Add Course" button for admin and instructor */}
+                    {(role === 'admin' || role === 'instructor') && (
+                      <button
+                        type="button"
+                        className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        onClick={() => router.push('/courses/add')}
+                      >
+                        <PlusIcon className="h-4 w-4 mr-2" />
+                        เพิ่มวิชาใหม่
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -368,15 +371,30 @@ useEffect(() => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div className="flex items-center justify-end space-x-2">
-                                  <button className="text-indigo-600 hover:text-indigo-900">
+                                  {/* View button - available for all roles */}
+                                  <button 
+                                    className="text-indigo-600 hover:text-indigo-900"
+                                    onClick={() => router.push(`/courses/${course.course_code}`)}
+                                  >
                                     <EyeIcon className="h-4 w-4" />
                                   </button>
-                                  <button className="text-gray-600 hover:text-gray-900">
-                                    <PencilIcon className="h-4 w-4" />
-                                  </button>
-                                  <button className="text-red-600 hover:text-red-900">
-                                    <TrashIcon className="h-4 w-4" />
-                                  </button>
+                                  
+                                  {/* Edit button - only for admin and instructor */}
+                                  {(role === 'admin' || role === 'instructor') && (
+                                    <button 
+                                      className="text-gray-600 hover:text-gray-900"
+                                      onClick={() => router.push(`/courses/edit/${course.course_code}`)}
+                                    >
+                                      <PencilIcon className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                  
+                                  {/* Delete button - only for admin */}
+                                  {role === 'admin' && (
+                                    <button className="text-red-600 hover:text-red-900">
+                                      <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>

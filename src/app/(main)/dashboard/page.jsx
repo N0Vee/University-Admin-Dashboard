@@ -161,13 +161,16 @@ export default function DashboardPage() {
                     >
                       ส่งออกรายงาน
                     </button>
-                    <button
-                      type="button"
-                      className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                      onClick={() => router.push('/students/add')}
-                    >
-                      เพิ่มนักศึกษา
-                    </button>
+                    {/* Only show "Add Student" button for admin */}
+                    {role === 'admin' && (
+                      <button
+                        type="button"
+                        className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        onClick={() => router.push('/students/add')}
+                      >
+                        เพิ่มนักศึกษา
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -205,14 +208,25 @@ export default function DashboardPage() {
                           <h3 className="text-base font-semibold leading-6 text-gray-900">
                             นักศึกษาล่าสุด
                           </h3>
-                          <button onClick={() => router.push('/students/student_management')} className="cursor-pointer text-sm text-indigo-600 hover:text-indigo-500">
-                            ดูทั้งหมด
-                          </button>
+                          {/* Only show "View All" button for admin and instructor */}
+                          {(role === 'admin' || role === 'instructor') && (
+                            <button onClick={() => router.push('/students')} className="cursor-pointer text-sm text-indigo-600 hover:text-indigo-500">
+                              ดูทั้งหมด
+                            </button>
+                          )}
                         </div>
                         <div className="mt-6 flow-root">
                           <ul className="-my-5 divide-y divide-gray-200">
                             {students.map((student) => (
-                              <li key={student.id} className="py-4 cursor-pointer hover:bg-gray-100" onClick={() => { router.push(`/students/student_profile/${student.id}`) }}>
+                              <li key={student.id} className="py-4 cursor-pointer hover:bg-gray-100" onClick={() => { 
+                                // Admin/Instructor can view any profile, Student can only view their own
+                                if (role === 'admin' || role === 'instructor') {
+                                  router.push(`/students/profile/${student.id}`)
+                                } else if (role === 'student') {
+                                  // For student, only allow viewing their own profile - you'll need to check student ID
+                                  router.push(`/students/profile/${student.id}`) // This should be current user's profile
+                                }
+                              }}>
                                 <div className="flex items-center space-x-4">
                                   <div className="flex-shrink-0">
                                     <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
@@ -238,9 +252,12 @@ export default function DashboardPage() {
                                     </p>
                                   </div>
                                   <div className="flex-shrink-0">
-                                    <button className="text-gray-400 hover:text-gray-500">
-                                      <EllipsisVerticalIcon className="h-5 w-5" />
-                                    </button>
+                                    {/* Only show action button for admin */}
+                                    {role === 'admin' && (
+                                      <button className="text-gray-400 hover:text-gray-500">
+                                        <EllipsisVerticalIcon className="h-5 w-5" />
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               </li>
@@ -281,25 +298,84 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Quick Actions */}
+                    {/* Quick Actions - Show different actions based on role */}
                     <div className="mt-6 bg-white overflow-hidden shadow rounded-lg">
                       <div className="px-4 py-5 sm:p-6">
                         <h3 className="text-base font-semibold leading-6 text-gray-900">
                           การดำเนินการด่วน
                         </h3>
                         <div className="mt-6 space-y-3">
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                            📊 สร้างรายงานประจำเดือน
-                          </button>
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                            📝 อนุมัติการลงทะเบียน
-                          </button>
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                            💌 ส่งประกาศสำคัญ
-                          </button>
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                            ⚙️ ตั้งค่าระบบ
-                          </button>
+                          {/* Admin actions */}
+                          {role === 'admin' && (
+                            <>
+                              <button 
+                                onClick={() => router.push('/students/add')}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                👤 เพิ่มนักศึกษาใหม่
+                              </button>
+                              <button 
+                                onClick={() => router.push('/courses/add')}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                📚 เพิ่มรายวิชาใหม่
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                📊 สร้างรายงานประจำเดือน
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                � ส่งประกาศสำคัญ
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                ⚙️ ตั้งค่าระบบ
+                              </button>
+                            </>
+                          )}
+                          
+                          {/* Instructor actions */}
+                          {role === 'instructor' && (
+                            <>
+                              <button 
+                                onClick={() => router.push('/courses/add')}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                📚 เพิ่มรายวิชาใหม่
+                              </button>
+                              <button 
+                                onClick={() => router.push('/courses')}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                📝 จัดการรายวิชา
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                📊 ดูผลการเรียน
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                💌 ส่งประกาศ
+                              </button>
+                            </>
+                          )}
+                          
+                          {/* Student actions */}
+                          {role === 'student' && (
+                            <>
+                              <button 
+                                onClick={() => router.push('/courses')}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                📚 ดูรายวิชา
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                📝 ลงทะเบียนเรียน
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                📊 ดูผลการเรียน
+                              </button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                👤 แก้ไขโปรไฟล์
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -32,6 +32,20 @@ export default function StudentDetailPage() {
     const [student, setStudent] = useState(null)
     const [loading, setLoading] = useState(true)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [role, setRole] = useState(null)
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            try {
+                const response = await fetch('/api/auth/get-role')
+                const data = await response.json()
+                setRole(data.role)
+            } catch (error) {
+                console.error('Error fetching user role:', error)
+            }
+        }
+        fetchUserRole()
+    }, [])
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -124,20 +138,27 @@ export default function StudentDetailPage() {
                                             </p>
                                         </div>
                                         <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
-                                            <button
-                                                onClick={() => router.push(`/students/edit/${student.id}`)}
-                                                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
-                                                <PencilIcon className="h-4 w-4 mr-2" />
-                                                แก้ไข
-                                            </button>
-                                            <button
-                                                onClick={handleDelete}
-                                                className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                            >
-                                                <TrashIcon className="h-4 w-4 mr-2" />
-                                                ลบ
-                                            </button>
+                                            {/* Edit button - only for admin */}
+                                            {role === 'admin' && (
+                                                <button
+                                                    onClick={() => router.push(`/students/edit/${student.id}`)}
+                                                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                >
+                                                    <PencilIcon className="h-4 w-4 mr-2" />
+                                                    แก้ไข
+                                                </button>
+                                            )}
+                                            
+                                            {/* Delete button - only for admin */}
+                                            {role === 'admin' && (
+                                                <button
+                                                    onClick={handleDelete}
+                                                    className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                >
+                                                    <TrashIcon className="h-4 w-4 mr-2" />
+                                                    ลบ
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
