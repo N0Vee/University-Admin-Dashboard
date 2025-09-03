@@ -15,6 +15,33 @@ export default function StudentManagementPage() {
   const [selectedFaculty, setSelectedFaculty] = useState('ทุกคณะ')
   const [selectedYear, setSelectedYear] = useState('ทุกชั้นปี')
   const [selectedEnrollmentType, setSelectedEnrollmentType] = useState('ทุกประเภทการศึกษา')
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch('/api/auth/get-role')
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.replace('/login')
+          }
+          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json()
+        setRole(data.role)
+
+        if (data.role !== 'admin' && data.role !== 'instructor') {
+          router.replace('/students')
+        }
+        
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+      }
+
+    }
+
+    fetchUserRole()
+  }, [role])
 
   useEffect(() => {
     const fetchStudents = async () => {

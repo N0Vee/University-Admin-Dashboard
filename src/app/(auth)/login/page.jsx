@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/24/solid'
 import { useRouter } from 'next/navigation'
+import { SignJWT } from 'jose'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -53,10 +54,11 @@ export default function LoginPage() {
 
         setIsLoading(false)
 
+
         if (data?.role === 'admin') {
             router.push('/dashboard')
         } else if (data?.role === 'student') {
-            router.push('/student')
+            router.push('/dashboard')
         } else {
             setError('บทบาทผู้ใช้ไม่ถูกต้อง')
         }

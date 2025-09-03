@@ -38,11 +38,33 @@ export default function CourseDetailPage() {
   const { course_code } = params
   const [course, setCourse] = useState([])
   const [students, setStudents] = useState([])
+  const [role, setRole] = useState(null)
   const [instructor, setInstructor] = useState([])
   const [assignments, setAssignments] = useState([])
   const [announcements, setAnnouncements] = useState([])
   const [activeTab, setActiveTab] = useState('overview')
 
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch('/api/auth/get-role')
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.replace('/login')
+          }
+          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json()
+        setRole(data.role)
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+      }
+
+    }
+
+    fetchUserRole()
+  }, [role])
 
   useEffect(() => {
     const fetchCourse = async () => {

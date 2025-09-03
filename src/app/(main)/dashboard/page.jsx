@@ -27,6 +27,7 @@ import {
 export default function DashboardPage() {
   const router = useRouter()
   const [students, setStudents] = useState([]);
+  const [role, setRole] = useState(null)
   const [studentsCount, setStudentsCount] = useState(0)
   const [coursesCount, setCoursesCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -52,8 +53,29 @@ export default function DashboardPage() {
       icon: BookOpenIcon,
       color: 'bg-amber-500'
     },
-    
+
   ]
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch('/api/auth/get-role')
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.replace('/login')
+          }
+          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json()
+        setRole(data.role)
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+      }
+
+    }
+
+    fetchUserRole()
+  }, [role])
 
   useEffect(() => {
 
