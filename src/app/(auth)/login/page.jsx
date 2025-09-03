@@ -55,12 +55,11 @@ export default function LoginPage() {
         setIsLoading(false)
 
 
-        if (data?.role === 'admin') {
-            router.push('/dashboard')
-        } else if (data?.role === 'student') {
-            router.push('/dashboard')
+        if (data?.role === 'admin' || data?.role === 'student' || data?.role === 'instructor') {
+          router.push('/dashboard')
         } else {
-            setError('บทบาทผู้ใช้ไม่ถูกต้อง')
+          setError(data?.error || 'บทบาทผู้ใช้ไม่ถูกต้อง')
+          return
         }
 
     }

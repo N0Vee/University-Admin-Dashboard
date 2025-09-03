@@ -10,33 +10,18 @@ import {
 } from '@heroicons/react/24/solid'
 
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../context/AuthContext'
 
 export default function Navbar() {
   const router = useRouter()
-  const [userRole, setUserRole] = useState(null)
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const response = await fetch('/api/auth/get-role')
-        const data = await response.json()
-        setUserRole(data.role)
-      } catch (error) {
-        console.error('Error fetching user role:', error)
-      }
-    }
-    fetchUserRole()
-  }, [])
+  const { role, user, logout } = useAuth()
 
   const handleLogout = () => {
-    fetch('/api/auth/logout', {
-      method: 'POST',
-    })
-    router.push('/login')
+    logout()
   }
 
   const getRoleDisplay = () => {
-    switch (userRole) {
+    switch (role) {
       case 'admin': return { label: 'Admin', initials: 'AD', color: 'bg-red-500' }
       case 'instructor': return { label: 'Instructor', initials: 'IN', color: 'bg-blue-500' }
       case 'student': return { label: 'Student', initials: 'ST', color: 'bg-green-500' }
@@ -78,7 +63,7 @@ export default function Navbar() {
                   <div className={`h-8 w-8 rounded-full ${roleInfo.color} flex items-center justify-center`}>
                     <span className="text-xs font-medium text-white">{roleInfo.initials}</span>
                   </div>
-                  <span className="ml-3 text-sm font-medium text-gray-700">{roleInfo.label}</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">{user?.email || 'Loading...'}</span>
                   <button className='hover:bg-gray-100 p-1 rounded-full cursor-pointer' onClick={() => handleLogout()}>
                     <ArrowRightStartOnRectangleIcon className="ml-2 h-4 w-4 text-red-800" />
                   </button>

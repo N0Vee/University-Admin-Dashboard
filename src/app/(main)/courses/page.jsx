@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { useAuth } from '@/app/context/AuthContext'
 import Sidebar from '@/app/components/Sidebar'
 
 import {
@@ -31,7 +32,7 @@ import {
 
 export default function CourseManagementPage() {
   const router = useRouter()
-  const [role, setRole] = useState(null)
+  const { role, loading } = useAuth()
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSemester, setFilterSemester] = useState('all');
@@ -39,28 +40,6 @@ export default function CourseManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-
-useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch('/api/auth/get-role')
-        if (!res.ok) {
-          if (res.status === 401) {
-            router.replace('/login')
-          }
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-        }
-        const data = await res.json()
-        setRole(data.role)
-      } catch (error) {
-        console.error('Error fetching user role:', error)
-      }
-
-    }
-
-    fetchUserRole()
-  }, [role])
 
   useEffect(() => {
     const fetchCourses = async () => {
