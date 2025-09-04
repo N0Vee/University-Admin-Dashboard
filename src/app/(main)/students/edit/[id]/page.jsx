@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'
+import { z } from 'zod'
 
 import {
   ArrowLeftIcon,
@@ -18,6 +19,7 @@ export default function EditStudentPage() {
   const [title, setTitle] = useState("")
   const [studentData, setStudentData] = useState(null)
   const [role, setRole] = useState(null)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -131,6 +133,45 @@ export default function EditStudentPage() {
   const yearLevels = [1, 2, 3, 4, 5, 6]
   const enrollmentTypes = ['ปกติ', 'กศ.บป.', 'นานาชาติ', 'พิเศษ']
 
+  // Zod validation schema
+  const studentSchema = z.object({
+    title: z.string().min(1, 'กรุณาเลือกคำหน้าชื่อ'),
+    titleEng: z.string().optional(),
+    firstName: z.string().min(1, 'กรุณากรอกชื่อ (ภาษาไทย)'),
+    lastName: z.string().min(1, 'กรุณากรอกนามสกุล (ภาษาไทย)'),
+    firstNameEng: z.string().min(1, 'กรุณากรอกชื่อ (ภาษาอังกฤษ)'),
+    lastNameEng: z.string().min(1, 'กรุณากรอกนามสกุล (ภาษาอังกฤษ)'),
+    studentId: z.string().optional(),
+    email: z.string().optional(),
+    idCard: z.string().regex(/^\d{13}$/, 'เลขบัตรประชาชนต้องมี 13 หลัก'),
+    phone: z.string().regex(/^[0-9]{10}$/, 'เบอร์โทรศัพท์ต้องมี 10 หลัก'),
+    birthDate: z.string().min(1, 'กรุณาเลือกวันเกิด'),
+    faculty: z.string().min(1, 'กรุณาเลือกคณะ'),
+    major: z.string().min(1, 'กรุณากรอกสาขาวิชา'),
+    yearLevel: z.string().min(1, 'กรุณาเลือกชั้นปี'),
+    enrollmentType: z.string().min(1, 'กรุณาเลือกประเภทการเรียน'),
+    address: z.string().optional(),
+    emergencyContact: z.string().optional(),
+    emergencyPhone: z.string().optional(),
+    profileImage: z.any().optional()
+  })
+
+  const validateForm = () => {
+    try {
+      studentSchema.parse(formData)
+      setError('')
+      return true
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errorMessages = err.issues.map(issue => issue.message)
+        setError(errorMessages.join(', '))
+      } else {
+        setError('เกิดข้อผิดพลาดในการตรวจสอบข้อมูล')
+      }
+      return false
+    }
+  }
+
   useEffect(() => {
     if (formData.title == "นาย") {
       setTitle("Mr.")
@@ -160,6 +201,8 @@ export default function EditStudentPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!validateForm()) return
 
     try {
       const form = new FormData()

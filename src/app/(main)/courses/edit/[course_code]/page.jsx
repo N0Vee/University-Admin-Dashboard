@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'
+import { z } from 'zod'
 
 import {
   ArrowLeftIcon,
@@ -140,6 +141,39 @@ export default function CourseEditPage({ params }) {
     { value: 'อาทิตย์', label: 'อาทิตย์' }
   ]
 
+  // Zod validation schema
+  const courseSchema = z.object({
+    courseCode: z.string().min(1, 'กรุณากรอกรหัสวิชา'),
+    courseName: z.string().min(1, 'กรุณากรอกชื่อวิชา (ภาษาไทย)'),
+    courseNameEn: z.string().min(1, 'กรุณากรอกชื่อวิชา (ภาษาอังกฤษ)'),
+    credits: z.string().min(1, 'กรุณากรอกจำนวนหน่วยกิต'),
+    semester: z.string().min(1, 'กรุณาเลือกภาคเรียน'),
+    faculty: z.string().min(1, 'กรุณาเลือกคณะ'),
+    department: z.string().min(1, 'กรุณาเลือกภาควิชา'),
+    instructor: z.string().min(1, 'กรุณากรอกชื่ออาจารย์ผู้สอน'),
+    maxStudents: z.string().min(1, 'กรุณากรอกจำนวนนักศึกษาสูงสุด'),
+    status: z.string().min(1, 'กรุณาเลือกสถานะ'),
+    schedule: z.array(z.any()).optional(),
+    objectives: z.array(z.string()).optional(),
+    description: z.string().optional()
+  })
+
+  const validateForm = () => {
+    try {
+      courseSchema.parse(formData)
+      setError('')
+      return true
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errorMessages = err.issues.map(issue => issue.message)
+        setError(errorMessages.join(', '))
+      } else {
+        setError('เกิดข้อผิดพลาดในการตรวจสอบข้อมูล')
+      }
+      return false
+    }
+  }
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
@@ -203,6 +237,9 @@ export default function CourseEditPage({ params }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!validateForm()) return
+
     setIsLoading(true)
     setError('')
 
