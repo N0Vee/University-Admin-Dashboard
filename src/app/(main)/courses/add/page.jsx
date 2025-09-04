@@ -1,8 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/components/Sidebar'
-import { z } from 'zod'
+import { useUserRole } from '@/hooks/useUserRole'
+import { courseValidationSchema, validateFormData } from '@/utils/validation'
+import { FACULTIES, DEPARTMENTS, STATUS_OPTIONS, DAYS_OF_WEEK } from '@/constants'
 
 import {
   ArrowLeftIcon,
@@ -21,33 +23,9 @@ export default function CourseAddPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [role, setRole] = useState(null)
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch('/api/auth/get-role')
-        if (!res.ok) {
-          if (res.status === 401) {
-            router.replace('/login')
-          }
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-        }
-        const data = await res.json()
-        setRole(data.role)
-
-        if (data.role !== 'admin' && data.role !== 'instructor') {
-          router.replace('/courses')
-        }
-
-      } catch (error) {
-        console.error('Error fetching user role:', error)
-      }
-
-    }
-
-    fetchUserRole()
-  }, [role])
+  
+  // Use custom hook for user role management
+  const { role, loading } = useUserRole(['admin', 'instructor'], '/courses')
 
   const [formData, setFormData] = useState({
     courseCode: '',
@@ -67,74 +45,9 @@ export default function CourseAddPage() {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-  const faculties = [
-    'วิศวกรรมศาสตร์',
-    'ครุศาสตร์',
-    'วิทยาศาสตร์',
-    'ศิลปศาสตร์',
-    'บริหารธุรกิจ',
-    'แพทยศาสตร์',
-    'เทคโนโลยีการเกษตร',
-    'วิทยาลัยแพทยศาสตร์เขตร้อน'
-  ]
-
-  const departments = {
-    'วิศวกรรมศาสตร์': ['วิศวกรรมคอมพิวเตอร์', 'วิศวกรรมไฟฟ้า', 'วิศวกรรมเครื่องกล', 'วิศวกรรมโยธา'],
-    'วิทยาศาสตร์': ['วิทยาการคอมพิวเตอร์', 'คณิตศาสตร์', 'ฟิสิกส์', 'เคมี', 'ชีววิทยา'],
-    'ครุศาสตร์': ['การศึกษาปฐมวัย', 'การศึกษาประถม', 'คณิตศาสตรศึกษา', 'ภาษาไทย'],
-    'ศิลปศาสตร์': ['ภาษาอังกฤษ', 'ภาษาไทย', 'ประวัติศาสตร์', 'ปรัชญา'],
-    'บริหารธุรกิจ': ['การจัดการ', 'การตลาด', 'การบัญชี', 'การเงิน'],
-    'แพทยศาสตร์': ['แพทยศาสตร์', 'พยาบาลศาสตร์', 'เทคนิคการแพทย์'],
-    'เทคโนโลยีการเกษตร': ['เกษตรศาสตร์', 'วิทยาศาสตร์การอาหาร'],
-    'วิทยาลัยแพทยศาสตร์เขตร้อน': ['แพทยศาสตร์เขตร้อน']
-  }
-
-  const statusOptions = [
-    { value: 'active', label: 'เปิดรับสมัคร', color: 'bg-green-100 text-green-800' },
-    { value: 'upcoming', label: 'กำลังจะเปิด', color: 'bg-yellow-100 text-yellow-800' },
-  ]
-
-  const daysOfWeek = [
-    { value: 'จันทร์', label: 'จันทร์' },
-    { value: 'อังคาร', label: 'อังคาร' },
-    { value: 'พุธ', label: 'พุธ' },
-    { value: 'พฤหัสบดี', label: 'พฤหัสบดี' },
-    { value: 'ศุกร์', label: 'ศุกร์' },
-    { value: 'เสาร์', label: 'เสาร์' },
-    { value: 'อาทิตย์', label: 'อาทิตย์' }
-  ]
-
-  // Zod validation schema
-  const courseSchema = z.object({
-    courseCode: z.string().min(1, 'กรุณากรอกรหัสวิชา'),
-    courseName: z.string().min(1, 'กรุณากรอกชื่อวิชา (ภาษาไทย)'),
-    courseNameEn: z.string().min(1, 'กรุณากรอกชื่อวิชา (ภาษาอังกฤษ)'),
-    credits: z.string().min(1, 'กรุณากรอกจำนวนหน่วยกิต'),
-    semester: z.string().min(1, 'กรุณาเลือกภาคเรียน'),
-    faculty: z.string().min(1, 'กรุณาเลือกคณะ'),
-    department: z.string().min(1, 'กรุณาเลือกภาควิชา'),
-    instructor: z.string().min(1, 'กรุณากรอกชื่ออาจารย์ผู้สอน'),
-    maxStudents: z.string().min(1, 'กรุณากรอกจำนวนนักศึกษาสูงสุด'),
-    status: z.string().min(1, 'กรุณาเลือกสถานะ'),
-    schedule: z.array(z.any()).optional(),
-    objectives: z.array(z.string()).optional(),
-    description: z.string().optional()
-  })
-
+  // Validation function
   const validateForm = () => {
-    try {
-      courseSchema.parse(formData)
-      setError('')
-      return true
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        const errorMessages = err.issues.map(issue => issue.message)
-        setError(errorMessages.join(', '))
-      } else {
-        setError('เกิดข้อผิดพลาดในการตรวจสอบข้อมูล')
-      }
-      return false
-    }
+    return validateFormData(courseValidationSchema, formData, setError)
   }
 
   const handleInputChange = (e) => {
@@ -226,6 +139,18 @@ export default function CourseAddPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading while fetching user role
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">กำลังตรวจสอบสิทธิ์...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -390,7 +315,7 @@ export default function CourseAddPage() {
                         className="text-black py-2 px-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
                         <option value="">เลือกคณะ</option>
-                        {faculties.map((faculty) => (
+                        {FACULTIES.map((faculty) => (
                           <option key={faculty} value={faculty}>
                             {faculty}
                           </option>
@@ -412,7 +337,7 @@ export default function CourseAddPage() {
                         className="text-black py-2 px-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
                         <option value="">เลือกภาควิชา</option>
-                        {formData.faculty && departments[formData.faculty]?.map((dept) => (
+                        {formData.faculty && DEPARTMENTS[formData.faculty]?.map((dept) => (
                           <option key={dept} value={dept}>
                             {dept}
                           </option>
@@ -464,7 +389,7 @@ export default function CourseAddPage() {
                         onChange={handleInputChange}
                         className="text-black py-2 px-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
-                        {statusOptions.map((option) => (
+                        {STATUS_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>
@@ -504,7 +429,7 @@ export default function CourseAddPage() {
                             className="text-black py-2 px-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           >
                             <option value="">เลือกวัน</option>
-                            {daysOfWeek.map((day) => (
+                            {DAYS_OF_WEEK.map((day) => (
                               <option key={day.value} value={day.value}>
                                 {day.label}
                               </option>
