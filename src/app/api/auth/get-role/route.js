@@ -22,11 +22,10 @@ export async function GET() {
       new TextEncoder().encode(process.env.JWT_SECRET)
     );
 
-
-    return NextResponse.json({ role: payload.role, id: payload.id, email: payload.email });
+    return NextResponse.json({ role: payload.role })
   } catch (error) {
     console.error('JWT verification error:', error);
-    return NextResponse.json({ role: null, error: 'Invalid token' }, { status: 401 });
+    return NextResponse.json({ role: null })
   }
 
 }
