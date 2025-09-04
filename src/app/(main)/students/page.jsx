@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/context/AuthContext'
 import Sidebar from '@/app/components/Sidebar'
 
 import {
@@ -10,38 +11,19 @@ import {
 
 export default function StudentManagementPage() {
   const router = useRouter()
+  const { role, loading } = useAuth()
   const [students, setStudents] = useState([])
   const [search, setSearch] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState('ทุกคณะ')
   const [selectedYear, setSelectedYear] = useState('ทุกชั้นปี')
   const [selectedEnrollmentType, setSelectedEnrollmentType] = useState('ทุกประเภทการศึกษา')
-  const [role, setRole] = useState(null);
 
+  // Redirect non-admin/instructor users
   useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch('/api/auth/get-role')
-        if (!res.ok) {
-          if (res.status === 401) {
-            router.replace('/login')
-          }
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-        }
-        const data = await res.json()
-        setRole(data.role)
-
-        if (data.role !== 'admin' && data.role !== 'instructor') {
-          router.replace('/students')
-        }
-        
-      } catch (error) {
-        console.error('Error fetching user role:', error)
-      }
-
+    if (!loading && role && role !== 'admin' && role !== 'instructor') {
+      router.replace('/dashboard')
     }
-
-    fetchUserRole()
-  }, [role])
+  }, [role, loading, router])
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -94,6 +76,36 @@ export default function StudentManagementPage() {
 
     return matchesSearch && matchesFaculty && matchesYear && matchesEnrollmentType
   })
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50">
+        <div className="flex h-screen pt-16">
+          <Sidebar currentPath="/students" />
+          <main className="flex-1 bg-zinc-50 p-6 overflow-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+              <div className="h-10 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="bg-white p-4 rounded-lg shadow">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50">
