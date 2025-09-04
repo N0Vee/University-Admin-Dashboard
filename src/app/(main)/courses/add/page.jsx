@@ -141,28 +141,17 @@ export default function CourseAddPage() {
     }
   }
 
-  // Show loading while fetching user role
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังตรวจสอบสิทธิ์...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
-      {/* Sidebar */}
-      <Sidebar currentPath="/courses" />
+    <div className="min-h-screen bg-zinc-50">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <Sidebar currentPath="/courses" />
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6">
-            <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8">
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8">
               {/* Page header */}
               <div className="mb-6">
                 <button
@@ -622,6 +611,7 @@ export default function CourseAddPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

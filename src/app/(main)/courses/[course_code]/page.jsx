@@ -101,18 +101,14 @@ export default function CourseDetailPage() {
       if (!course?.course_code) return;
 
       try {
-        const res = await fetch(`/api/enrollments?eq=${course.course_code}`);
+        const res = await fetch(`/api/enrollments?course_code=${course.course_code}`);
+        if (!res.ok) throw new Error('Failed to fetch enrollments');
         const enrollments = await res.json();
-
-        const studentList = [];
-        for (const enrollment of enrollments) {
-          const studentRes = await fetch(`/api/studentByStudentId/${enrollment.student_id}`);
-          const studentData = await studentRes.json();
-          studentList.push(studentData);
-        }
-
-        setStudents(studentList);
-
+        const studentsData = enrollments.map(e => ({
+          ...e.students,
+          grade: e.grade
+        }));
+        setStudents(studentsData);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการโหลดนักเรียน:", error);
       }
@@ -196,7 +192,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="flex h-screen pt-16">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar currentPath={('/courses')} />
         {/* Main Content */}

@@ -30,7 +30,6 @@ export default function StudentDetailPage() {
   const params = useParams()
   const { id } = params;
   const [student, setStudent] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [role, setRole] = useState(null)
   const [userID, setUserID] = useState(null)
@@ -57,10 +56,8 @@ export default function StudentDetailPage() {
         const data = await res.json()
 
         setStudent(data)
-        setLoading(false)
       } catch (error) {
         console.error('Error fetching student:', error)
-        setLoading(false)
       }
     }
 
@@ -111,7 +108,7 @@ export default function StudentDetailPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="flex h-screen pt-16">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar currentPath={`/students/profile/${userID}`}/>
 
@@ -141,7 +138,7 @@ export default function StudentDetailPage() {
                     </div>
                     <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
                       {/* Edit button - only for admin */}
-                      {role === 'admin' && (
+                      {role === 'admin' && student && (
                         <button
                           onClick={() => router.push(`/students/edit/${student.id}`)}
                           className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -152,7 +149,7 @@ export default function StudentDetailPage() {
                       )}
 
                       {/* Delete button - only for admin */}
-                      {role === 'admin' && (
+                      {role === 'admin' && student && (
                         <button
                           onClick={handleDelete}
                           className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -170,64 +167,43 @@ export default function StudentDetailPage() {
                 <div className="bg-white shadow rounded-lg p-6 mb-6">
                   <div className="flex items-center space-x-6">
                     <div className="shrink-0">
-                      {loading ? (
-                        // Skeleton for profile image
-                        <div className="h-24 w-24 rounded-full bg-gray-200 border-4 border-gray-200 animate-pulse"></div>
+                      {student?.profile_image_url ? (
+                        <Image
+                          width={24}
+                          height={24}
+                          unoptimized
+                          className='h-24 w-24 object-cover rounded-full border-4 border-gray-200'
+                          key={student.profile_image_url}
+                          src={student.profile_image_url}
+                          alt={student.profile_image_url}
+                        />
+
                       ) : (
-                        student.profile_image_url ? (
-                          <Image
-                            width={24}
-                            height={24}
-                            unoptimized
-                            className='h-24 w-24 object-cover rounded-full border-4 border-gray-200'
-                            key={student.profile_image_url}
-                            src={student.profile_image_url}
-                            alt={student.profile_image_url}
-                          />
 
-                        ) : (
-
-                          <div className="h-24 w-24 rounded-full bg-indigo-100 border-4 border-gray-200 flex items-center justify-center">
-                            <UserIcon className="h-12 w-12 text-indigo-600" />
-                          </div>
-                        )
+                        <div className="h-24 w-24 rounded-full bg-indigo-100 border-4 border-gray-200 flex items-center justify-center">
+                          <UserIcon className="h-12 w-12 text-indigo-600" />
+                        </div>
                       )}
                     </div>
 
                     <div className="flex-1">
-                      {loading ? (
-
-                        <>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-48 mb-2"></div>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-56 mb-3"></div>
-                          <div className="flex items-center space-x-4">
-                            <div className="h-4 bg-gray-200 rounded-full animate-pulse w-20"></div>
-                            <div className="h-4 bg-gray-200 rounded-full animate-pulse w-16"></div>
-                            <div className="h-4 bg-gray-200 rounded-full animate-pulse w-14"></div>
-                          </div>
-                        </>
-                      ) : (
-
-                        <>
-                          <h3 className="text-xl font-bold text-gray-900">
-                            {student.title}{student.first_name} {student.last_name}
-                          </h3>
-                          <p className="text-lg text-gray-600">
-                            {student.title_eng}{student.first_name_eng} {student.last_name_eng}
-                          </p>
-                          <div className="mt-2 flex items-center space-x-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                              {student.student_id}
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {getYearText(student.year_level)}
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {student.enrollment_type}
-                            </span>
-                          </div>
-                        </>
-                      )}
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {student?.title}{student?.first_name} {student?.last_name}
+                      </h3>
+                      <p className="text-lg text-gray-600">
+                        {student?.title_eng}{student?.first_name_eng} {student?.last_name_eng}
+                      </p>
+                      <div className="mt-2 flex items-center space-x-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {student?.student_id}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {student?.year_level ? getYearText(student.year_level) : ''}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {student?.enrollment_type}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -235,188 +211,91 @@ export default function StudentDetailPage() {
                 {/* Student Information Sections */}
                 <div className="space-y-6">
                   {/* Contact Information */}
-                  {loading ? (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <EnvelopeIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                          ข้อมูลติดต่อ
-                        </h3>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                          <div className="flex items-center space-x-3">
-                            <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">อีเมล</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[190px]"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <PhoneIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">เบอร์โทรศัพท์</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[90px]"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <IdentificationIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">เลขบัตรประชาชน</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[100px]"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">วันเกิด</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[120px]"></p>
-                            </div>
-                          </div>
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <EnvelopeIcon className="h-5 w-5 mr-2 text-indigo-600" />
+                      ข้อมูลติดต่อ
+                    </h3>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <div className="flex items-center space-x-3">
+                        <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">อีเมล</p>
+                          <p className="text-sm text-gray-900">{student?.email}</p>
                         </div>
-
-                        <div className="mt-6 flex items-start space-x-3">
-                          <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">ที่อยู่</p>
-                            <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[300px]"></p>
-                            <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[250px]"></p>
-                            <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-[200px]"></p>
-                          </div>
-                        </div>
-
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <EnvelopeIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                          ข้อมูลติดต่อ
-                        </h3>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                          <div className="flex items-center space-x-3">
-                            <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">อีเมล</p>
-                              <p className="text-sm text-gray-900">{student.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <PhoneIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">เบอร์โทรศัพท์</p>
-                              <p className="text-sm text-gray-900">{student.phone}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <IdentificationIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">เลขบัตรประชาชน</p>
-                              <p className="text-sm text-gray-900">{student.id_card}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">วันเกิด</p>
-                              <p className="text-sm text-gray-900">{formatDate(student.birth_date)}</p>
-                            </div>
-                          </div>
+                      <div className="flex items-center space-x-3">
+                        <PhoneIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">เบอร์โทรศัพท์</p>
+                          <p className="text-sm text-gray-900">{student?.phone}</p>
                         </div>
-                        {student.address && (
-                          <div className="mt-6 flex items-start space-x-3">
-                            <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">ที่อยู่</p>
-                              <p className="text-sm text-gray-900">{student.address}</p>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </>
-                  )}
+                      <div className="flex items-center space-x-3">
+                        <IdentificationIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">เลขบัตรประชาชน</p>
+                          <p className="text-sm text-gray-900">{student?.id_card}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">วันเกิด</p>
+                          <p className="text-sm text-gray-900">{student?.birth_date ? formatDate(student.birth_date) : ''}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {student?.address && (
+                      <div className="mt-6 flex items-start space-x-3">
+                        <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">ที่อยู่</p>
+                          <p className="text-sm text-gray-900">{student.address}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
 
 
                   {/* Academic Information */}
-                  {loading ? (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <AcademicCapIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                          ข้อมูลการศึกษา
-                        </h3>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                          <div className="flex items-center space-x-3">
-                            <BuildingLibraryIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">คณะ</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-20"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <BookOpenIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">สาขาวิชา</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-10"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <AcademicCapIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">ชั้นปี</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-10"></p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <ClipboardDocumentListIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">ประเภทการเรียน</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-15"></p>
-                            </div>
-                          </div>
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <AcademicCapIcon className="h-5 w-5 mr-2 text-indigo-600" />
+                      ข้อมูลการศึกษา
+                    </h3>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <div className="flex items-center space-x-3">
+                        <BuildingLibraryIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">คณะ</p>
+                          <p className="text-sm text-gray-900">{student?.faculty}</p>
                         </div>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <AcademicCapIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                          ข้อมูลการศึกษา
-                        </h3>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                          <div className="flex items-center space-x-3">
-                            <BuildingLibraryIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">คณะ</p>
-                              <p className="text-sm text-gray-900">{student.faculty}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <BookOpenIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">สาขาวิชา</p>
-                              <p className="text-sm text-gray-900">{student.major}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <AcademicCapIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">ชั้นปี</p>
-                              <p className="text-sm text-gray-900">{getYearText(student.year_level)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <ClipboardDocumentListIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-500">ประเภทการเรียน</p>
-                              <p className="text-sm text-gray-900">{student.enrollment_type}</p>
-                            </div>
-                          </div>
+                      <div className="flex items-center space-x-3">
+                        <BookOpenIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">สาขาวิชา</p>
+                          <p className="text-sm text-gray-900">{student?.major}</p>
                         </div>
                       </div>
-                    </>
-                  )}
+                      <div className="flex items-center space-x-3">
+                        <AcademicCapIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">ชั้นปี</p>
+                          <p className="text-sm text-gray-900">{student?.year_level ? getYearText(student.year_level) : ''}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <ClipboardDocumentListIcon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">ประเภทการเรียน</p>
+                          <p className="text-sm text-gray-900">{student?.enrollment_type}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Academic Progress */}
                   {/* <div className="bg-white shadow rounded-lg p-6">
@@ -453,91 +332,43 @@ export default function StudentDetailPage() {
                                     </div> */}
 
                   {/* Emergency Contact */}
-                  {loading ? (
-                    <>
-
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <PhoneIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                          ผู้ติดต่อฉุกเฉิน
-                        </h3>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-
+                  {(student?.emergency_contact || student?.emergency_phone) && (
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <PhoneIcon className="h-5 w-5 mr-2 text-indigo-600" />
+                        ผู้ติดต่อฉุกเฉิน
+                      </h3>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        {student.emergency_contact && (
                           <div className="flex items-center space-x-3">
                             <UserIcon className="h-5 w-5 text-gray-400" />
                             <div>
                               <p className="text-sm font-medium text-gray-500">ชื่อผู้ติดต่อ</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-30"></p>
+                              <p className="text-sm text-gray-900">{student.emergency_contact}</p>
                             </div>
                           </div>
-
-
+                        )}
+                        {student.emergency_phone && (
                           <div className="flex items-center space-x-3">
                             <PhoneIcon className="h-5 w-5 text-gray-400" />
                             <div>
                               <p className="text-sm font-medium text-gray-500">เบอร์โทรศัพท์</p>
-                              <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-30"></p>
+                              <p className="text-sm text-gray-900">{student.emergency_phone}</p>
                             </div>
                           </div>
-
-                        </div>
+                        )}
                       </div>
-
-                    </>
-                  ) : (
-                    <>
-                      {(student.emergency_contact || student.emergency_phone) && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <PhoneIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                            ผู้ติดต่อฉุกเฉิน
-                          </h3>
-                          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            {student.emergency_contact && (
-                              <div className="flex items-center space-x-3">
-                                <UserIcon className="h-5 w-5 text-gray-400" />
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">ชื่อผู้ติดต่อ</p>
-                                  <p className="text-sm text-gray-900">{student.emergency_contact}</p>
-                                </div>
-                              </div>
-                            )}
-                            {student.emergency_phone && (
-                              <div className="flex items-center space-x-3">
-                                <PhoneIcon className="h-5 w-5 text-gray-400" />
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">เบอร์โทรศัพท์</p>
-                                  <p className="text-sm text-gray-900">{student.emergency_phone}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    </div>
                   )}
 
 
                   {/* System Information */}
-                  {loading ? (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">ข้อมูลระบบ</h3>
-                        <div className="text-sm text-gray-600">
-                          <p className="mt-1 h-4 bg-gray-200 rounded-full animate-pulse w-40"></p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">ข้อมูลระบบ</h3>
-                        <div className="text-sm text-gray-600">
-                          <p>วันที่สร้างบัญชี: {formatDate(student.created_at)}</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">ข้อมูลระบบ</h3>
+                    <div className="text-sm text-gray-600">
+                      <p>วันที่สร้างบัญชี: {student?.created_at ? formatDate(student.created_at) : ''}</p>
+                    </div>
+                  </div>
 
                 </div>
               </div>
@@ -556,7 +387,7 @@ export default function StudentDetailPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">ยืนยันการลบนักศึกษา</h3>
               <p className="text-sm text-gray-500 mb-6">
-                คุณแน่ใจหรือไม่ที่จะลบข้อมูลของ {student.title}{student.first_name} {student.last_name}?
+                คุณแน่ใจหรือไม่ที่จะลบข้อมูลของ {student?.title}{student?.first_name} {student?.last_name}?
                 การดำเนินการนี้ไม่สามารถย้อนกลับได้
               </p>
               <div className="flex justify-center space-x-3">

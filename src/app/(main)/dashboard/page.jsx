@@ -175,41 +175,9 @@ export default function DashboardPage() {
     fetchStudentCourses()
   }, [userId])
 
-
-  // Show loading state while auth is loading
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50">
-        <div className="flex h-screen pt-16">
-          <Sidebar currentPath="/dashboard" />
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <main className="flex-1 relative overflow-y-auto focus:outline-none">
-              <div className="py-6">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white p-6 rounded-lg shadow">
-                          <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </main>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="flex h-screen pt-16">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar currentPath="/dashboard" />
 

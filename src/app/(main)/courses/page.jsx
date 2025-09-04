@@ -149,7 +149,7 @@ export default function CourseManagementPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="flex h-screen pt-16">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar currentPath={('/courses')} />
 

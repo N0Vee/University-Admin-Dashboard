@@ -77,57 +77,29 @@ export default function StudentManagementPage() {
     return matchesSearch && matchesFaculty && matchesYear && matchesEnrollmentType
   })
 
-  // Show loading state while auth is loading
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50">
-        <div className="flex h-screen pt-16">
-          <Sidebar currentPath="/students" />
-          <main className="flex-1 bg-zinc-50 p-6 overflow-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-              <div className="h-10 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="bg-white p-4 rounded-lg shadow">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-zinc-50">
-
-      <div className="flex h-screen pt-16">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar currentPath="/students" />
 
         {/* Main Content */}
-        <main className="flex-1 bg-zinc-50 p-6 overflow-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">จัดการนักศึกษา</h1>
-            {/* Only show "Add Student" button for admin */}
-            {role === 'admin' && (
-              <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
-                เพิ่มนักศึกษา
-              </button>
-            )}
-          </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h1 className="text-2xl font-semibold text-gray-900">จัดการนักศึกษา</h1>
+                  {/* Only show "Add Student" button for admin */}
+                  {role === 'admin' && (
+                    <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+                      เพิ่มนักศึกษา
+                    </button>
+                  )}
+                </div>
 
-          {/* Filters */}
-          <div className="flex gap-4 mb-6">
+                {/* Filters */}
+                <div className="flex gap-4 mb-6">
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
@@ -213,8 +185,11 @@ export default function StudentManagementPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </main>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   )

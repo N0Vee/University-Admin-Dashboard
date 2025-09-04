@@ -292,9 +292,10 @@ export default function CourseEditPage({ params }) {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
-      {/* Sidebar */}
-      <Sidebar currentPath="/courses" />
+    <div className="min-h-screen bg-zinc-50">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <Sidebar currentPath="/courses" />
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -798,6 +799,7 @@ export default function CourseEditPage({ params }) {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
