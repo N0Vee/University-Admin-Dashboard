@@ -1,34 +1,44 @@
-# 🤖 Copilot Instructions for University Admin Dashboard
+# Copilot Instructions for University Admin Dashboard
 
-Welcome to the **University Admin Dashboard** codebase! This document provides essential guidelines for AI coding agents to be productive in this project. The dashboard is a full-stack SaaS application for managing university operations, built with **Next.js** and **Supabase**.
+Welcome to the University Admin Dashboard codebase! This document provides essential guidelines for AI coding agents to be productive in this project. Please follow the instructions below to maintain consistency and quality.
 
 ---
 
-## 🏗️ Architecture Overview
+## 📂 Project Overview
 
-### **Key Components**
-- **Frontend**: Built with Next.js (App Router) and styled using TailwindCSS.
-- **Backend**: API routes in `src/app/api/` handle server-side logic, including authentication, course management, and student operations.
-- **Database**: Supabase is used for authentication and data storage.
-- **Charts**: Chart.js is integrated for analytics and visualizations.
+This is a **Full-Stack SaaS Dashboard** for managing university operations, built with:
+- **Next.js (App Router)** for the frontend
+- **Supabase** for authentication and database
+- **Tailwind CSS** for styling
+- **Chart.js** for data visualization
+- Deployed on **Vercel**
 
-### **Directory Structure**
-- `src/app/(main)/`: Contains the main application pages, including `dashboard`, `courses`, and `students`.
-- `src/app/api/`: API routes for handling server-side operations (e.g., `/api/courses/add`, `/api/students/update`).
-- `src/components/`: Reusable UI components like `Navbar` and `Sidebar`.
-- `src/lib/`: Utility files for Supabase integration.
-- `src/utils/`: Helper functions (e.g., JWT handling).
+Key features include role-based access control, student and course management, analytics dashboards, and data import/export capabilities.
 
-### **Data Flow**
-- **Frontend**: Pages fetch data from API routes using `fetch`.
-- **Backend**: API routes interact with Supabase for database operations.
-- **Authentication**: Managed via Supabase Auth, with role-based access control.
+---
+
+## 🏗️ Architecture
+
+### Key Directories:
+- **`src/app`**: Contains the Next.js pages and API routes.
+  - `auth/`: Authentication-related pages (e.g., login).
+  - `main/`: Main application pages (e.g., dashboard, courses, students).
+  - `api/`: Serverless API routes for handling backend logic.
+- **`src/components`**: Reusable React components (e.g., `Navbar`, `Sidebar`).
+- **`src/context`**: Context providers (e.g., `AuthContext.js` for managing authentication state).
+- **`src/utils`**: Utility functions (e.g., `jwt.js` for token handling, `validation.js` for form validation).
+- **`src/lib`**: Supabase client configurations.
+
+### Data Flow:
+1. **Frontend**: Pages in `src/app` fetch data via API routes or Supabase client.
+2. **Backend**: API routes in `src/app/api` handle database operations and business logic.
+3. **State Management**: Context API (e.g., `AuthContext`) manages global state like user roles.
 
 ---
 
 ## 🛠️ Developer Workflows
 
-### **Setup**
+### Local Development:
 1. Clone the repository:
    ```bash
    git clone https://github.com/N0Vee/University-Admin-Dashboard.git
@@ -43,62 +53,68 @@ Welcome to the **University Admin Dashboard** codebase! This document provides e
    npm run dev
    ```
 
-### **Testing API Routes**
-- Use tools like Postman or Thunder Client to test API endpoints under `src/app/api/`.
-- Example: Test `POST /api/courses/add` with a JSON payload for adding a course.
+### Testing:
+- **Manual Testing**: Verify role-based access control by logging in as Admin, Instructor, and Student.
+- **API Testing**: Use tools like Postman to test API routes under `src/app/api`.
 
-### **Building and Deployment**
-- Build the project:
-  ```bash
-  npm run build
-  ```
-- Deploy to Vercel (configured in `vercel.json`).
+### Debugging:
+- Use `console.log` for debugging serverless API routes.
+- Check browser console for frontend errors.
 
 ---
 
-## 📏 Project Conventions
+## 📏 Conventions
 
-### **Coding Standards**
-- Use functional components with React hooks.
-- Follow TailwindCSS conventions for styling.
-- API routes should handle errors gracefully and return appropriate HTTP status codes.
+### Github push code:
+- Naming with git convention : (feat:, fix:, docs:, style:, refactor:, test:, chore:)
+- Commit messages should be concise and descriptive (e.g., "Add student search functionality").
 
-### **File Naming**
-- Use kebab-case for files and directories (e.g., `add-course`, `edit-student`).
-- Dynamic routes are enclosed in brackets (e.g., `[course_code]`, `[id]`).
 
-### **State Management**
-- Use `useState` and `useEffect` for local state.
-- Fetch data in `useEffect` hooks and handle loading/error states.
+### Code Style:
+- Follow the **Airbnb JavaScript Style Guide**.
+- Use **ESLint** and **Prettier** for linting and formatting.
+
+### Component Structure:
+- Place reusable components in `src/components`.
+- Use Tailwind CSS classes for styling.
+
+### API Routes:
+- Organize routes by resource (e.g., `students`, `courses`).
+- Use dynamic routes for resource-specific operations (e.g., `students/[id]`).
 
 ---
 
 ## 🔗 Integration Points
 
-### **Supabase**
-- Authentication: Managed via `src/lib/supabaseClient.js`.
-- Database: Queries are executed using Supabase's JavaScript client.
+### Supabase:
+- **Authentication**: Managed via `src/context/AuthContext.js`.
+- **Database**: Queries are written in API routes under `src/app/api`.
 
-### **External Libraries**
-- **Chart.js**: Used for analytics in the dashboard.
-- **TailwindCSS**: For consistent and responsive styling.
-
----
-
-## 📂 Examples
-
-### **Adding a Course**
-1. Frontend: `src/app/(main)/courses/add/page.jsx`
-   - Contains the form for adding a course.
-2. Backend: `src/app/api/courses/add/route.js`
-   - Handles the `POST` request to add a course to the database.
-
-### **Editing a Student**
-1. Frontend: `src/app/(main)/students/edit/[id]/page.jsx`
-   - Contains the form for editing student details.
-2. Backend: `src/app/api/students/update/[id]/route.js`
-   - Handles the `PUT` request to update student information.
+### External Libraries:
+- **Chart.js**: Used for analytics visualizations.
+- **Tailwind CSS**: Utility-first CSS framework for styling.
 
 ---
 
-Feel free to extend this document as the project evolves!
+## 📝 Examples
+
+### Adding a New API Route:
+1. Create a new folder under `src/app/api` (e.g., `students/add`).
+2. Add a `route.js` file with the following structure:
+   ```javascript
+   import { supabase } from '@/lib/supabaseClient';
+
+   export default async function handler(req, res) {
+       if (req.method === 'POST') {
+           const { data, error } = await supabase.from('students').insert(req.body);
+           if (error) return res.status(400).json({ error: error.message });
+           return res.status(200).json(data);
+       }
+       res.setHeader('Allow', ['POST']);
+       res.status(405).end(`Method ${req.method} Not Allowed`);
+   }
+   ```
+
+---
+
+For any questions or clarifications, feel free to update this document or consult the project maintainers.
