@@ -1,10 +1,9 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import Sidebar from '@/app/components/Sidebar'
 import {
-	MagnifyingGlassIcon,
 	CheckCircleIcon,
 	XCircleIcon,
 	ClockIcon,
@@ -14,50 +13,51 @@ import {
 
 export default function RegisterPage() {
 	const router = useRouter()
-	const { role, loading } = useAuth()
-
-	const [enrollments, setEnrollments] = useState([])
+	const { role, userId, loading } = useAuth()
+	
+	const [pendingCourses, setPendingCourses] = useState([])
 	const [courses, setCourses] = useState([])
-	const [userInfo, setUserInfo] = useState({ id: null, role: null })
+	const [allEnrollments, setAllEnrollments] = useState([]) // สำหรับ admin/instructor
 	const [dataLoading, setDataLoading] = useState(true)
-
-	// UI filters
-	const [search, setSearch] = useState('')
-	const [selectedStatus, setSelectedStatus] = useState('ทุกสถานะ')
 
 	// Modal states
 	const [showModal, setShowModal] = useState(false)
 	const [modalAction, setModalAction] = useState(null)
 	const [selectedEnrollment, setSelectedEnrollment] = useState(null)
 
-	// Fetch minimal user info (id, role) from token
-	useEffect(() => {
-		const fetchRole = async () => {
-			try {
-				const res = await fetch('/api/auth/get-role')
-				if (!res.ok) return
-				const data = await res.json()
-				setUserInfo({ id: data.id ?? null, role: data.role ?? null })
-			} catch {}
-		}
-		fetchRole()
-	}, [])
-
-	// Fetch enrollments and courses once
+	// Fetch pendingCourses and courses
 	useEffect(() => {
 		const fetchData = async () => {
-			if (!role) return
+			if (!role || !userId) return
 			
 			setDataLoading(true)
 			try {
 				// Fetch enrollments
-				const enrollRes = await fetch('/api/enrollments')
+				let enrollRes;
+				if (role === 'student') {
+					// Student เรียกด้วย user_id
+					enrollRes = await fetch(`/api/enrollments?user_id=${userId}`)
+				} else {
+					// Admin/Instructor เรียกทั้งหมด
+					enrollRes = await fetch('/api/enrollments')
+				}
+				
 				if (!enrollRes.ok) {
 					if (enrollRes.status === 401) router.replace('/login')
 					return
 				}
 				const enrollData = await enrollRes.json()
-				setEnrollments(Array.isArray(enrollData) ? enrollData : [])
+				
+				if (role === 'student') {
+					// เก็บเฉพาะ pending courses สำหรับ student
+					const pending = Array.isArray(enrollData) 
+						? enrollData.filter(item => item.status === 'pending')
+						: []
+					setPendingCourses(pending)
+				} else {
+					// เก็บทั้งหมดสำหรับ admin/instructor
+					setAllEnrollments(Array.isArray(enrollData) ? enrollData : [])
+				}
 
 				// Fetch courses
 				const coursesRes = await fetch('/api/courses')
@@ -73,7 +73,7 @@ export default function RegisterPage() {
 		}
 
 		fetchData()
-	}, [router, role])
+	}, [router, role, userId])
 
 	// Actions
 	const openConfirmModal = (enrollment, action) => {
@@ -92,7 +92,6 @@ export default function RegisterPage() {
 				body: JSON.stringify({ status: modalAction }),
 			})
 			
-			
 			if (!res.ok) {
 				const errorData = await res.json().catch(() => ({}))
 				console.error('API Error:', errorData)
@@ -101,10 +100,23 @@ export default function RegisterPage() {
 			}
 
 			// Refresh enrollments
-			const enrollRes = await fetch('/api/enrollments')
+			let enrollRes;
+			if (role === 'student') {
+				enrollRes = await fetch(`/api/enrollments?user_id=${userId}`)
+			} else {
+				enrollRes = await fetch('/api/enrollments')
+			}
+			
 			if (enrollRes.ok) {
 				const enrollData = await enrollRes.json()
-				setEnrollments(Array.isArray(enrollData) ? enrollData : [])
+				if (role === 'student') {
+					const pending = Array.isArray(enrollData) 
+						? enrollData.filter(item => item.status === 'pending')
+						: []
+					setPendingCourses(pending)
+				} else {
+					setAllEnrollments(Array.isArray(enrollData) ? enrollData : [])
+				}
 			}
 			
 			setShowModal(false)
@@ -112,40 +124,59 @@ export default function RegisterPage() {
 			setModalAction(null)
 			
 			alert(`${modalAction === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}การลงทะเบียนเรียบร้อยแล้ว`)
-		} catch (e) {
-			console.error('Network Error:', e)
-			alert('เกิดข้อผิดพลาดในการเชื่อมต่อ')
+		} catch (err) {
+			console.error('Error updating enrollment:', err)
+			alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
 		}
 	}
 
 	const handleEnroll = async (courseCode) => {
-		// Demo: ใช้ id จาก token เป็น student_id ถ้าไม่มีจะแจ้งเตือน
-		if (!userInfo?.id) {
-			alert('ไม่พบรหัสนักศึกษา (Demo)')
+		console.log('🎯 Debug - handleEnroll called with:', { courseCode, userId })
+		
+		// Use userId from AuthContext
+		if (!userId) {
+			console.log('❌ Debug - No userId found')
+			alert('ไม่พบรหัสนักศึกษา')
 			return
 		}
+		
+		const enrollData = { course_code: courseCode, student_id: userId, status: 'pending' }
+		console.log('📝 Debug - Enrollment data to send:', enrollData)
+		
 		try {
 			const res = await fetch('/api/enrollments', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ course_code: courseCode, student_id: userInfo.id, status: 'pending' }),
+				body: JSON.stringify(enrollData),
 			})
+			
+			console.log('📡 Debug - Enroll response status:', res.status)
+			
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}))
+				console.log('❌ Debug - Enroll error:', err)
 				alert(err?.error || 'ลงทะเบียนไม่สำเร็จ')
 				return
 			}
 			
-			// Refresh enrollments
-			const enrollRes = await fetch('/api/enrollments')
+			const responseData = await res.json()
+			console.log('✅ Debug - Enroll success response:', responseData)
+			
+			// Refresh pending courses
+			console.log('🔄 Debug - Refreshing pending courses after enroll')
+			const enrollRes = await fetch(`/api/enrollments?user_id=${userId}`)
 			if (enrollRes.ok) {
 				const enrollData = await enrollRes.json()
-				setEnrollments(Array.isArray(enrollData) ? enrollData : [])
+				console.log('📊 Debug - Refreshed enrollments:', enrollData)
+				const pending = Array.isArray(enrollData) 
+					? enrollData.filter(item => item.status === 'pending')
+					: []
+				setPendingCourses(pending)
 			}
 			
 			alert('ส่งคำขอลงทะเบียนแล้ว (รออนุมัติ)')
 		} catch (e) {
-			console.error(e)
+			console.error('❌ Debug - Network error:', e)
 			alert('เกิดข้อผิดพลาดในการลงทะเบียน')
 		}
 	}
@@ -166,37 +197,6 @@ export default function RegisterPage() {
 			</span>
 		)
 	}
-
-	// Apply search/status filters and role visibility
-	const filtered = useMemo(() => {
-		const term = search.toLowerCase()
-		const withinSearch = (e) => {
-			const s1 = e?.courses?.course_name?.toLowerCase() || ''
-			const s2 = e?.courses?.course_code?.toLowerCase() || ''
-			const s3 = `${e?.students?.first_name || ''} ${e?.students?.last_name || ''}`.toLowerCase()
-			const s4 = e?.students?.student_id?.toLowerCase() || ''
-			return s1.includes(term) || s2.includes(term) || s3.includes(term) || s4.includes(term)
-		}
-
-		const byStatus = (e) => selectedStatus === 'ทุกสถานะ' || e.status === selectedStatus
-
-		const byRole = (e) => {
-			if (role === 'admin') return true
-			if (role === 'instructor') {
-				// สมมติ userInfo.id คือ instructor_code
-				if (!userInfo?.id) return false
-				return e?.courses?.instructor_code === userInfo.id
-			}
-			if (role === 'student') {
-				// สมมติ userInfo.id คือ student_id
-				if (!userInfo?.id) return false
-				return e?.student_id === userInfo.id
-			}
-			return true
-		}
-
-		return enrollments.filter((e) => withinSearch(e) && byStatus(e) && byRole(e))
-	}, [enrollments, role, search, selectedStatus, userInfo])
 
 	// Show skeleton loading while auth is loading
 	if (loading) {
@@ -254,98 +254,197 @@ export default function RegisterPage() {
 					<main className="flex-1 relative overflow-y-auto focus:outline-none">
 						<div className="py-6">
 							<div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-								<div className="flex items-center justify-between mb-6">
-									<h1 className="text-2xl font-semibold text-gray-900">
-										{role === 'student' ? 'ลงทะเบียนเรียน' : 'จัดการการลงทะเบียน'}
-									</h1>
-									{role === 'admin' && (
-										<div className="flex items-center gap-3">
-											<span className="text-sm text-gray-600">รวม {filtered.length} รายการ</span>
-										</div>
-									)}
-								</div>
-
-								{/* Filters */}
-								<div className="flex gap-4 mb-6">
-									<select
-										value={selectedStatus}
-										onChange={(e) => setSelectedStatus(e.target.value)}
-										className="text-black block w-fit rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-									>
-										<option value="ทุกสถานะ">ทุกสถานะ</option>
-										<option value="pending">รอการอนุมัติ</option>
-										<option value="approved">อนุมัติแล้ว</option>
-										<option value="rejected">ปฏิเสธ</option>
-									</select>
-
-									<div className="relative">
-										<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-											<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-										</div>
-										<input
-											type="text"
-											value={search}
-											onChange={(e) => setSearch(e.target.value)}
-											placeholder="ค้นหารายวิชาหรือนักศึกษา..."
-											className="block w-full rounded-lg border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-										/>
-									</div>
-								</div>
-
-								{/* Student Demo: available courses */}
+							<div className="flex items-center justify-between mb-6">
+								<h1 className="text-2xl font-semibold text-gray-900">
+									{role === 'student' ? 'ลงทะเบียนเรียน' : 'จัดการการลงทะเบียน'}
+								</h1>
 								{role === 'student' && (
+									<div className="flex items-center gap-3">
+										<span className="text-sm text-gray-600">
+											รายวิชาที่กำลังลงทะเบียน: {pendingCourses.length} รายการ
+										</span>
+									</div>
+								)}
+							</div>
+								
+								{/* Student section */}
+								{role === 'student' && (
+									<>
+										{/* Pending enrollments - วิชาที่กำลังลงทะเบียน */}
+										<div className="mb-6 bg-white shadow rounded-lg">
+											<div className="px-4 py-5 sm:p-6">
+												<h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+													<ClockIcon className="h-6 w-6 mr-2 text-yellow-600" />
+													วิชาที่กำลังลงทะเบียน (รอการอนุมัติ)
+												</h2>
+												{dataLoading ? (
+													<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+														{[...Array(3)].map((_, i) => (
+															<div key={i} className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 animate-pulse">
+																<div className="h-4 bg-yellow-200 rounded w-full mb-2"></div>
+																<div className="h-3 bg-yellow-200 rounded w-20 mb-1"></div>
+																<div className="h-3 bg-yellow-200 rounded w-16"></div>
+																<div className="h-6 bg-yellow-200 rounded w-24 mt-2"></div>
+															</div>
+														))}
+													</div>
+												) : (
+													<>
+														{pendingCourses.length > 0 ? (
+															<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+																{pendingCourses.map((enr) => (
+																	<div key={enr.id} className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+																		<div>
+																			<h3 className="font-medium text-gray-900 text-sm">{enr.courses?.course_name}</h3>
+																			<p className="text-xs text-gray-500 mt-1">{enr.courses?.course_code}</p>
+																			<p className="text-xs text-gray-600 mt-1">หน่วยกิต: {enr.courses?.credits}</p>
+																			<div className="mt-2">
+																				{statusPill(enr.status)}
+																			</div>
+																			<p className="text-xs text-gray-500 mt-2">
+																				วันที่ส่งคำขอ: {new Date(enr.enrolled_at || enr.created_at).toLocaleDateString('th-TH')}
+																			</p>
+																		</div>
+																	</div>
+																))}
+															</div>
+														) : (
+															<div className="text-center py-8">
+																<ClockIcon className="h-12 w-12 text-yellow-300 mx-auto mb-4" />
+																<p className="text-gray-500">ไม่มีรายวิชาที่กำลังรอการอนุมัติ</p>
+															</div>
+														)}
+													</>
+												)}
+											</div>
+										</div>
+
+										{/* Available courses for enrollment */}
+										<div className="mb-6 bg-white shadow rounded-lg">
+											<div className="px-4 py-5 sm:p-6">
+												<h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+													<AcademicCapIcon className="h-6 w-6 mr-2 text-indigo-600" />
+													รายวิชาทั้งหมดที่สามารถลงทะเบียนได้
+												</h2>
+												{dataLoading ? (
+													<div className="animate-pulse">
+														<div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+															<div className="h-4 bg-gray-200 rounded w-48"></div>
+														</div>
+														{[...Array(5)].map((_, i) => (
+															<div key={i} className="px-4 py-3 border-b border-gray-200">
+																<div className="flex items-center space-x-4">
+																	<div className="h-4 bg-gray-200 rounded w-40"></div>
+																	<div className="h-4 bg-gray-200 rounded w-24"></div>
+																	<div className="h-4 bg-gray-200 rounded w-32"></div>
+																	<div className="h-6 bg-gray-200 rounded w-20 ml-auto"></div>
+																</div>
+															</div>
+														))}
+													</div>
+												) : (
+													<div className="overflow-auto rounded-lg border border-gray-200">
+														<table className="min-w-full divide-y divide-gray-200 text-sm">
+															<thead className="bg-gray-50">
+																<tr>
+																	<th className="px-4 py-3 text-left font-medium text-gray-500">รายวิชา</th>
+																	<th className="px-4 py-3 text-left font-medium text-gray-500">หน่วยกิต</th>
+																	<th className="px-4 py-3 text-left font-medium text-gray-500">อาจารย์</th>
+																	<th className="px-4 py-3 text-right font-medium text-gray-500">การดำเนินการ</th>
+																</tr>
+															</thead>
+															<tbody className="divide-y divide-gray-200 bg-white">
+																{(() => {
+																	const availableCourses = courses.filter(c => !pendingCourses.some(e => e.course_code === c.course_code))
+																	console.log('📚 Debug - Available courses for enrollment:', {
+																		totalCourses: courses.length,
+																		pendingCourseCodes: pendingCourses.map(e => e.course_code),
+																		availableCount: availableCourses.length,
+																		userId
+																	})
+																	
+																	if (availableCourses.length === 0) {
+																		return (
+																			<tr>
+																				<td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+																					<div className="flex flex-col items-center">
+																						<AcademicCapIcon className="h-12 w-12 text-gray-300 mb-4" />
+																						<p>ไม่มีรายวิชาที่สามารถลงทะเบียนได้เพิ่มเติม</p>
+																					</div>
+																				</td>
+																			</tr>
+																		)
+																	}
+																	
+																	return availableCourses.map((c) => (
+																		<tr key={c.course_code} className="hover:bg-gray-50">
+																			<td className="px-4 py-3">
+																				<div className="text-sm font-medium text-gray-900">{c.course_name}</div>
+																				<div className="text-xs text-gray-500">{c.course_code}</div>
+																			</td>
+																			<td className="px-4 py-3 text-gray-900">{c.credits || '-'}</td>
+																			<td className="px-4 py-3 text-gray-900">{c.instructors.name || '-'}</td>
+																			<td className="px-4 py-3">
+																				<div className="flex justify-end">
+																					<button
+																						onClick={() => handleEnroll(c.course_code)}
+																						className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+																					>
+																						<PlusIcon className="h-3 w-3 mr-1" />
+																						ลงทะเบียน
+																					</button>
+																				</div>
+																			</td>
+																		</tr>
+																	))
+																})()}
+															</tbody>
+														</table>
+													</div>
+												)}
+											</div>
+										</div>
+									</>
+								)}
+
+								{/* Admin/Instructor view: Student Demo: available courses */}
+								{role !== 'student' && (
 									<div className="mb-6 bg-white shadow rounded-lg">
 										<div className="px-4 py-5 sm:p-6">
 											<h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
 												<AcademicCapIcon className="h-6 w-6 mr-2 text-indigo-600" />
-												รายวิชาที่เปิดให้ลงทะเบียน
+												รายวิชาทั้งหมด
 											</h2>
 											{dataLoading ? (
 												<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 													{[...Array(6)].map((_, i) => (
 														<div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200 animate-pulse">
-															<div className="flex justify-between items-start">
-																<div className="flex-1">
-																	<div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-																	<div className="h-3 bg-gray-200 rounded w-20 mb-1"></div>
-																	<div className="h-3 bg-gray-200 rounded w-16"></div>
-																</div>
-																<div className="h-8 w-20 bg-gray-200 rounded ml-2"></div>
-															</div>
+															<div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+															<div className="h-3 bg-gray-200 rounded w-20 mb-1"></div>
+															<div className="h-3 bg-gray-200 rounded w-16"></div>
 														</div>
 													))}
 												</div>
 											) : (
 												<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-													{courses.slice(0, 9).map((c) => {
-														const already = enrollments.some((e) => e.course_code === c.course_code && e.student_id === userInfo?.id)
-														return (
-															<div key={c.course_code} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-indigo-300 transition-colors">
-																<div className="flex justify-between items-start">
-																	<div className="flex-1">
-																		<h3 className="font-medium text-gray-900 text-sm">{c.course_name}</h3>
-																		<p className="text-xs text-gray-500 mt-1">{c.course_code}</p>
-																		<p className="text-xs text-gray-600 mt-1">หน่วยกิต: {c.credits}</p>
-																	</div>
-																	<button
-																		onClick={() => handleEnroll(c.course_code)}
-																		disabled={already}
-																		className="ml-2 inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-																	>
-																		{already ? 'ลงทะเบียนแล้ว' : 'ลงทะเบียน'}
-																	</button>
-																</div>
+													{courses.slice(0, 9).map((c) => (
+														<div key={c.course_code} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+															<div>
+																<h3 className="font-medium text-gray-900 text-sm">{c.course_name}</h3>
+																<p className="text-xs text-gray-500 mt-1">{c.course_code}</p>
+																<p className="text-xs text-gray-600 mt-1">หน่วยกิต: {c.credits}</p>
 															</div>
-														)
-													})}
+														</div>
+													))}
 												</div>
 											)}
 										</div>
 									</div>
 								)}
 
-								{/* Enrollments table */}
-								<div className="overflow-auto rounded-lg shadow bg-white">
+								{/* Enrollments table - Admin/Instructor only */}
+								{role !== 'student' && (
+									<div className="overflow-auto rounded-lg shadow bg-white">
 									{dataLoading ? (
 										<div className="animate-pulse">
 											<div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
@@ -385,7 +484,7 @@ export default function RegisterPage() {
 												</tr>
 											</thead>
 											<tbody className="divide-y divide-gray-200 bg-white">
-												{filtered.length === 0 ? (
+												{(role === 'student' ? pendingCourses : allEnrollments).length === 0 ? (
 													<tr>
 														<td colSpan={role === 'student' ? 5 : 6} className="px-4 py-8 text-center text-gray-500">
 															<div className="flex flex-col items-center">
@@ -395,7 +494,7 @@ export default function RegisterPage() {
 														</td>
 													</tr>
 												) : (
-													filtered.map((enr) => (
+													(role === 'student' ? pendingCourses : allEnrollments).map((enr) => (
 														<tr key={enr.id} className="hover:bg-gray-50">
 															{role !== 'student' && (
 																<td className="px-4 py-3">
@@ -442,7 +541,8 @@ export default function RegisterPage() {
 											</tbody>
 										</table>
 									)}
-								</div>
+									</div>
+								)}
 							</div>
 						</div>
 					</main>
