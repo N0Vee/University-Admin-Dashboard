@@ -32,7 +32,7 @@ import {
 
 export default function CourseManagementPage() {
   const router = useRouter()
-  const { role, loading } = useAuth()
+  const { role, loading, user } = useAuth()
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSemester, setFilterSemester] = useState('all');
@@ -40,26 +40,63 @@ export default function CourseManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [enrollments, setEnrollments] = useState([]);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/courses')
-        if (!res.ok) {
-          if (res.status === 401) {
-            router.replace('/login')
+        if (role === 'admin') {
+          // Admin sees all courses
+          const coursesRes = await fetch('/api/courses')
+          if (!coursesRes.ok) {
+            if (coursesRes.status === 401) {
+              router.replace('/login')
+            }
+            throw new Error(`Fetch failed: ${coursesRes.status} ${coursesRes.statusText}`);
           }
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+          const coursesData = await coursesRes.json()
+          setCourses(coursesData)
+        } else if (role === 'instructor') {
+          // Instructor sees only courses they teach
+          const coursesRes = await fetch(`/api/courses?instructor=${user?.instructor_code}`)
+          if (!coursesRes.ok) {
+            if (coursesRes.status === 401) {
+              router.replace('/login')
+            }
+            throw new Error(`Fetch failed: ${coursesRes.status} ${coursesRes.statusText}`);
+          }
+          const coursesData = await coursesRes.json()
+          setCourses(coursesData)
+        } else if (role === 'student') {
+          // Student sees only enrolled courses
+          const enrollmentsRes = await fetch(`/api/enrollments?user_id=${user?.id}`)
+          if (!enrollmentsRes.ok) {
+            if (enrollmentsRes.status === 401) {
+              router.replace('/login')
+            }
+            throw new Error(`Fetch failed: ${enrollmentsRes.status} ${enrollmentsRes.statusText}`);
+          }
+          const enrollmentsData = await enrollmentsRes.json()
+          setEnrollments(enrollmentsData)
+          
+          // Extract courses from enrollments
+          const studentCourses = enrollmentsData.map(enrollment => ({
+            ...enrollment.courses,
+            enrollment_status: enrollment.status,
+            enrolled_at: enrollment.enrolled_at,
+            instructors: { name: enrollment.courses.instructor } // Adjust instructor format for consistency
+          }))
+          setCourses(studentCourses)
         }
-        const data = await res.json()
-        setCourses(data)
       } catch (error) {
         console.error(error)
       }
     }
 
-    fetchCourses()
-  }, [])
+    if (role && user) {
+      fetchData()
+    }
+  }, [role, user, router])
 
 
   // Statistics calculation
@@ -105,12 +142,34 @@ export default function CourseManagementPage() {
 
   // Filter and search functionality
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchFields = [
+      course.course_name?.toLowerCase() || '',
+      course.course_code?.toLowerCase() || '',
+      course.instructor?.toLowerCase() || '',
+      course.instructors?.name?.toLowerCase() || ''
+    ];
+    
+    const matchesSearch = searchFields.some(field => 
+      field.includes(searchTerm.toLowerCase())
+    );
 
     const matchesSemester = filterSemester === 'all' || course.semester === filterSemester;
-    const matchesStatus = filterStatus === 'all' || course.status === filterStatus;
+    
+    // For students, also consider enrollment status
+    let matchesStatus = true;
+    if (role === 'student') {
+      if (filterStatus === 'all') {
+        matchesStatus = true;
+      } else if (filterStatus === 'enrolled') {
+        matchesStatus = course.enrollment_status === 'approved';
+      } else if (filterStatus === 'pending') {
+        matchesStatus = course.enrollment_status === 'pending';
+      } else {
+        matchesStatus = course.status === filterStatus;
+      }
+    } else {
+      matchesStatus = filterStatus === 'all' || course.status === filterStatus;
+    }
 
     return matchesSearch && matchesSemester && matchesStatus;
   });
@@ -162,24 +221,30 @@ export default function CourseManagementPage() {
                 <div className="md:flex md:items-center md:justify-between">
                   <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
-                      จัดการวิชาเรียน
+                      {role === 'admin' ? 'จัดการวิชาเรียน' : 
+                       role === 'instructor' ? 'วิชาที่สอน' : 
+                       'วิชาที่ลงทะเบียน'}
                     </h2>
                     <p className="mt-1 text-sm text-gray-500">
-                      จัดการข้อมูลวิชาเรียน การลงทะเบียน และการเรียนการสอน
+                      {role === 'admin' ? 'จัดการข้อมูลวิชาเรียน การลงทะเบียน และการเรียนการสอน' : 
+                       role === 'instructor' ? 'ดูข้อมูลวิชาที่สอน และจัดการข้อมูลการเรียนการสอน' : 
+                       'ดูข้อมูลวิชาที่ลงทะเบียน และสถานะการลงทะเบียน'}
                     </p>
                   </div>
                   <div className="mt-4 flex md:ml-4 md:mt-0">
-                    <button
-                      type="button"
-                      className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                    >
-                      ส่งออกข้อมูล
-                    </button>
+                    {role !== 'student' && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                      >
+                        ส่งออกข้อมูล
+                      </button>
+                    )}
                     {/* Only show "Add Course" button for admin and instructor */}
                     {(role === 'admin' || role === 'instructor') && (
                       <button
                         type="button"
-                        className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        className={`${role !== 'student' ? 'ml-3' : ''} inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600`}
                         onClick={() => router.push('/courses/add')}
                       >
                         <PlusIcon className="h-4 w-4 mr-2" />
@@ -251,9 +316,18 @@ export default function CourseManagementPage() {
                           className="rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                         >
                           <option value="all">ทุกสถานะ</option>
-                          <option value="active">กำลังเรียน</option>
-                          <option value="upcoming">เตรียมเปิด</option>
-                          <option value="completed">เสร็จสิ้น</option>
+                          {role === 'student' ? (
+                            <>
+                              <option value="enrolled">ลงทะเบียนแล้ว</option>
+                              <option value="pending">รอการอนุมัติ</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="active">กำลังเรียน</option>
+                              <option value="upcoming">เตรียมเปิด</option>
+                              <option value="completed">เสร็จสิ้น</option>
+                            </>
+                          )}
                         </select>
                       </div>
 
@@ -266,7 +340,9 @@ export default function CourseManagementPage() {
                   <div className="px-4 py-5 sm:p-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium leading-6 text-gray-900">
-                        รายการวิชาเรียน
+                        {role === 'admin' ? 'รายการวิชาเรียนทั้งหมด' : 
+                         role === 'instructor' ? 'รายการวิชาที่สอน' : 
+                         'รายการวิชาที่ลงทะเบียน'}
                       </h3>
                       <p className="text-sm text-gray-500">
                         พบ {filteredCourses.length} วิชา
@@ -290,7 +366,7 @@ export default function CourseManagementPage() {
                               ภาคเรียน / ตารางเรียน
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              สถานะ
+                              {role === 'student' ? 'สถานะการลงทะเบียน' : 'สถานะ'}
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                               การจัดการ
@@ -315,7 +391,7 @@ export default function CourseManagementPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">
-                                  {course.instructors.name}
+                                  {course.instructors?.name || course.instructor}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {course.department}
@@ -323,7 +399,7 @@ export default function CourseManagementPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">
-                                  {course.students_enrolled}/{course.max_students} คน
+                                  {course.students_enrolled || 0}/{course.max_students || 0} คน
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {course.credits} หน่วยกิต
@@ -334,7 +410,7 @@ export default function CourseManagementPage() {
                                   {course.semester}
                                 </div>
                                 <div className="text-sm text-gray-500 space-y-1">
-                                  {course.schedule.map((s, i) => (
+                                  {course.schedule?.map((s, i) => (
                                     <div key={i}>
                                       {s.day} {s.time}
                                       <div className="text-xs text-gray-400">ห้อง {s.room}</div>
@@ -344,9 +420,21 @@ export default function CourseManagementPage() {
 
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(course.status)}`}>
-                                  {getStatusText(course.status)}
-                                </span>
+                                {role === 'student' && course.enrollment_status ? (
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    course.enrollment_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                    course.enrollment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {course.enrollment_status === 'approved' ? 'ลงทะเบียนแล้ว' :
+                                     course.enrollment_status === 'pending' ? 'รอการอนุมัติ' :
+                                     'ถูกปฏิเสธ'}
+                                  </span>
+                                ) : (
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(course.status)}`}>
+                                    {getStatusText(course.status)}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div className="flex items-center justify-end space-x-2">
