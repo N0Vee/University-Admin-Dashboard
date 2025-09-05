@@ -46,7 +46,6 @@ export default function LoginPage() {
             data = await res.json()
 
         } catch (error) {
-            console.error(error)
             setError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์')
             setIsLoading(false)
             return

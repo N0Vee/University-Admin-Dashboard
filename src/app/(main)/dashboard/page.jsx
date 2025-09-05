@@ -26,7 +26,8 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { role, loading, userId } = useAuth()
+  const { role, loading: authLoading, userId } = useAuth()
+  const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [studentsCount, setStudentsCount] = useState(0)
   const [studentCourses, setStudentCourses] = useState([])
@@ -111,6 +112,7 @@ export default function DashboardPage() {
 
     const fetchStudents = async () => {
       try {
+        setLoading(true)
         const res = await fetch("/api/students?orderBy=id&order=desc",);
 
         if (!res.ok) {
@@ -124,7 +126,9 @@ export default function DashboardPage() {
         setStudents(data);
         setStudentsCount(data.length);
       } catch (error) {
-        console.error("เกิดข้อผิดพลาดขณะดึงข้อมูล:", error);
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -145,7 +149,7 @@ export default function DashboardPage() {
         const data = await res.json()
         setCoursesCount(data)
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
       }
     }
 
@@ -168,12 +172,70 @@ export default function DashboardPage() {
         const data = await res.json()
         setStudentCourses(data)
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
       }
     }
 
     fetchStudentCourses()
   }, [userId])
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      {/* Page header */}
+      <div className="mb-6">
+        <div className="md:flex md:items-center md:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-80"></div>
+          </div>
+          <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+            <div className="h-9 w-32 bg-gray-200 rounded-md"></div>
+            <div className="h-9 w-36 bg-gray-200 rounded-md"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:px-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gray-200 rounded-md mr-4"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts/Content */}
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -186,34 +248,38 @@ export default function DashboardPage() {
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                {/* Page header */}
-                <div className="mb-6">
-                  <div className="md:flex md:items-center md:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:truncate sm:text-3xl">
-                        {role === 'admin' ? 'ภาพรวมระบบ' : role === 'instructor' ? 'ภาพรวมการสอน' : 'ภาพรวมการเรียน'}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {role === 'admin'
-                          ? 'ข้อมูลสรุปและสถิติการจัดการนักศึกษา'
-                          : role === 'instructor'
-                            ? 'ข้อมูลสรุปการสอนและการจัดการรายวิชา'
-                            : 'ข้อมูลสรุปการเรียนและกิจกรรมของคุณ'
-                        }
-                      </p>
-                    </div>
-                    <div className="mt-4 flex md:ml-4 md:mt-0">
-                      {/* Admin actions */}
-                      {role === 'admin' && (
-                        <>
-                          <button
-                            type="button"
-                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                          >
-                            ส่งออกรายงาน
-                          </button>
-                          <button
-                            type="button"
+                {loading ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <>
+                    {/* Page header */}
+                    <div className="mb-6">
+                      <div className="md:flex md:items-center md:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:truncate sm:text-3xl">
+                            {role === 'admin' ? 'ภาพรวมระบบ' : role === 'instructor' ? 'ภาพรวมการสอน' : 'ภาพรวมการเรียน'}
+                          </h2>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {role === 'admin'
+                              ? 'ข้อมูลสรุปและสถิติการจัดการนักศึกษา'
+                              : role === 'instructor'
+                                ? 'ข้อมูลสรุปการสอนและการจัดการรายวิชา'
+                                : 'ข้อมูลสรุปการเรียนและกิจกรรมของคุณ'
+                            }
+                          </p>
+                        </div>
+                        <div className="mt-4 flex md:ml-4 md:mt-0">
+                          {/* Admin actions */}
+                          {role === 'admin' && (
+                            <>
+                              <button
+                                type="button"
+                                className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                              >
+                                ส่งออกรายงาน
+                              </button>
+                              <button
+                                type="button"
                             className="cursor-pointer ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                             onClick={() => router.push('/students/add')}
                           >
@@ -624,6 +690,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             </div>
           </main>

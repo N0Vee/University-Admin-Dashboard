@@ -14,8 +14,9 @@ import {
 
 export default function RegisterPage() {
 	const router = useRouter()
-	const { role, userId, loading } = useAuth()
+	const { role, userId, loading: authLoading } = useAuth()
 	
+	const [loading, setLoading] = useState(true)
 	const [pendingCourses, setPendingCourses] = useState([])
 	const [allStudentEnrollments, setAllStudentEnrollments] = useState([]) // เก็บ enrollment ทั้งหมดของ student
 	const [courses, setCourses] = useState([])
@@ -84,9 +85,10 @@ export default function RegisterPage() {
 					setCourses(Array.isArray(coursesData) ? coursesData : [])
 				}
 			} catch (err) {
-				console.error('Error fetching data:', err)
+				// Error handled silently - could be logged to monitoring service
 			} finally {
 				setDataLoading(false)
+				setLoading(false)
 			}
 		}
 
@@ -112,7 +114,6 @@ export default function RegisterPage() {
 			
 			if (!res.ok) {
 				const errorData = await res.json().catch(() => ({}))
-				console.error('API Error:', errorData)
 				alert(`อัปเดตสถานะไม่สำเร็จ: ${errorData.error || 'Unknown error'}`)
 				return
 			}
@@ -145,7 +146,6 @@ export default function RegisterPage() {
 			
 			alert(`${modalAction === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}การลงทะเบียนเรียบร้อยแล้ว`)
 		} catch (err) {
-			console.error('Error updating enrollment:', err)
 			alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ')
 		}
 	}
@@ -211,7 +211,6 @@ export default function RegisterPage() {
 			setSelectedCourse(null)
 			alert('ส่งคำขอลงทะเบียนเรียบร้อยแล้ว รอการอนุมัติ')
 		} catch (e) {
-			console.error('Network error:', e)
 			alert('เกิดข้อผิดพลาดในการลงทะเบียน')
 		}
 	}
@@ -331,6 +330,60 @@ export default function RegisterPage() {
 		)
 	}
 
+	// Loading skeleton component
+	const LoadingSkeleton = () => (
+		<div className="animate-pulse">
+			{/* Header */}
+			<div className="flex items-center justify-between mb-6">
+				<div className="h-8 bg-gray-200 rounded w-48"></div>
+				<div className="h-6 bg-gray-200 rounded w-64"></div>
+			</div>
+
+			{/* Student View - Tabs */}
+			{role === 'student' && (
+				<div className="mb-6">
+					<div className="border-b border-gray-200">
+						<nav className="-mb-px flex space-x-8">
+							<div className="h-10 bg-gray-200 rounded w-32"></div>
+							<div className="h-10 bg-gray-200 rounded w-36"></div>
+						</nav>
+					</div>
+				</div>
+			)}
+
+			{/* Search and Filter */}
+			<div className="mb-6 flex flex-col sm:flex-row gap-4">
+				<div className="flex-1">
+					<div className="h-9 bg-gray-200 rounded-md w-full"></div>
+				</div>
+				<div className="h-9 bg-gray-200 rounded-md w-32"></div>
+			</div>
+
+			{/* Table/Cards */}
+			<div className="bg-white shadow rounded-lg">
+				<div className="px-4 py-5 sm:p-6">
+					<div className="space-y-4">
+						{Array.from({ length: 5 }).map((_, i) => (
+							<div key={i} className="border border-gray-200 rounded-lg p-4">
+								<div className="flex items-start justify-between">
+									<div className="flex-1">
+										<div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+										<div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+										<div className="h-4 bg-gray-200 rounded w-1/3"></div>
+									</div>
+									<div className="flex space-x-2">
+										<div className="h-8 w-16 bg-gray-200 rounded"></div>
+										<div className="h-8 w-16 bg-gray-200 rounded"></div>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+
 	return (
 		<div className="min-h-screen bg-zinc-50">
 			<div className="flex h-screen">
@@ -339,16 +392,20 @@ export default function RegisterPage() {
 					<main className="flex-1 relative overflow-y-auto focus:outline-none">
 						<div className="py-6">
 							<div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-							<div className="flex items-center justify-between mb-6">
-								<h1 className="text-2xl font-semibold text-gray-900">
-									{role === 'student' ? 'ลงทะเบียนเรียน' : 'จัดการการลงทะเบียน'}
-								</h1>
-								{role === 'student' && (
-									<div className="flex items-center gap-3">
-										<span className="text-sm text-gray-600">
-											รายวิชาที่ลงทะเบียน: {filteredPendingCourses.length} จาก {allStudentEnrollments.length} รายการ
-										</span>
-									</div>
+								{loading ? (
+									<LoadingSkeleton />
+								) : (
+									<>
+										<div className="flex items-center justify-between mb-6">
+											<h1 className="text-2xl font-semibold text-gray-900">
+												{role === 'student' ? 'ลงทะเบียนเรียน' : 'จัดการการลงทะเบียน'}
+											</h1>
+											{role === 'student' && (
+												<div className="flex items-center gap-3">
+													<span className="text-sm text-gray-600">
+														รายวิชาที่ลงทะเบียน: {filteredPendingCourses.length} จาก {allStudentEnrollments.length} รายการ
+													</span>
+												</div>
 								)}
 							</div>
 								
@@ -784,6 +841,8 @@ export default function RegisterPage() {
 										</table>
 									)}
 									</div>
+								)}
+									</>
 								)}
 							</div>
 						</div>

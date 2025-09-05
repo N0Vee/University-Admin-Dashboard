@@ -29,6 +29,7 @@ export default function StudentDetailPage() {
   const router = useRouter()
   const params = useParams()
   const { id } = params;
+  const [loading, setLoading] = useState(true)
   const [student, setStudent] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [role, setRole] = useState(null)
@@ -51,13 +52,15 @@ export default function StudentDetailPage() {
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-
+        setLoading(true)
         const res = await fetch(`/api/student/${id}`)
         const data = await res.json()
 
         setStudent(data)
       } catch (error) {
-        console.error('Error fetching student:', error)
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -77,7 +80,6 @@ export default function StudentDetailPage() {
         }
         throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
       }
-      console.log('Student deleted')
       router.push('/students')
     } catch (error) {
       console.error('Error deleting student:', error)
@@ -105,6 +107,80 @@ export default function StudentDetailPage() {
     return yearTexts[year] || `ปี ${year}`
   }
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="min-h-screen bg-zinc-50">
+      <div className="flex h-screen">
+        <Sidebar currentPath={`/students/profile/${userID}`}/>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8">
+                <div className="animate-pulse">
+                  {/* Header */}
+                  <div className="mb-6">
+                    <div className="h-4 bg-gray-200 rounded w-48 mb-4"></div>
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 bg-gray-200 rounded w-64"></div>
+                      <div className="flex space-x-2">
+                        <div className="h-9 w-20 bg-gray-200 rounded"></div>
+                        <div className="h-9 w-20 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Profile Card */}
+                  <div className="bg-white shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <div className="flex items-start space-x-6">
+                        <div className="h-32 w-32 bg-gray-200 rounded-lg"></div>
+                        <div className="flex-1">
+                          <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-32 mb-4"></div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                              <div key={i} className="flex items-center">
+                                <div className="h-5 w-5 bg-gray-200 rounded mr-3"></div>
+                                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Info Cards */}
+                  <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                      <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                      <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+
+  if (loading) {
+    return <LoadingSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50">

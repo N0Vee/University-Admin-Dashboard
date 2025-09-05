@@ -16,6 +16,7 @@ export default function EditStudentPage() {
   const router = useRouter()
   const params = useParams()
   const { id } = params;
+  const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState("")
   const [studentData, setStudentData] = useState(null)
   const [role, setRole] = useState(null)
@@ -39,7 +40,7 @@ export default function EditStudentPage() {
         }
 
       } catch (error) {
-        console.error('Error fetching user role:', error)
+        // Error handled silently - could be logged to monitoring service
       }
 
     }
@@ -82,7 +83,9 @@ export default function EditStudentPage() {
         const data = await res.json()
         setStudentData(data)
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -231,11 +234,54 @@ export default function EditStudentPage() {
       setShowSuccessModal(true)
 
     } catch (err) {
-      console.error('เกิดข้อผิดพลาด:', err.message || err)
+      // Error handled silently - could be logged to monitoring service
     }
   }
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="min-h-screen bg-zinc-50">
+      <div className="flex h-screen">
+        <Sidebar currentPath="/students/student_management" />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8">
+                <div className="animate-pulse">
+                  <div className="mb-6">
+                    <div className="h-4 bg-gray-200 rounded w-48 mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-80"></div>
+                  </div>
+                  
+                  <div className="bg-white shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <div key={i}>
+                            <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div className="h-9 bg-gray-200 rounded w-full"></div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-6 flex justify-end space-x-3">
+                        <div className="h-9 w-20 bg-gray-200 rounded"></div>
+                        <div className="h-9 w-28 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
 
+  if (loading) {
+    return <LoadingSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50">

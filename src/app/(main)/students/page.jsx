@@ -11,8 +11,9 @@ import {
 
 export default function StudentManagementPage() {
   const router = useRouter()
-  const { role, loading } = useAuth()
+  const { role, loading: authLoading } = useAuth()
   const [students, setStudents] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState('ทุกคณะ')
   const [selectedYear, setSelectedYear] = useState('ทุกชั้นปี')
@@ -20,14 +21,15 @@ export default function StudentManagementPage() {
 
   // Redirect non-admin/instructor users
   useEffect(() => {
-    if (!loading && role && role !== 'admin' && role !== 'instructor') {
+    if (!authLoading && role && role !== 'admin' && role !== 'instructor') {
       router.replace('/dashboard')
     }
-  }, [role, loading, router])
+  }, [role, authLoading, router])
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
+        setLoading(true)
         const res = await fetch("/api/students?order=asc");
 
         if (!res.ok) {
@@ -40,7 +42,9 @@ export default function StudentManagementPage() {
         const data = await res.json();
         setStudents(data);
       } catch (error) {
-        console.error("เกิดข้อผิดพลาดขณะดึงข้อมูล:", error);
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -77,6 +81,69 @@ export default function StudentManagementPage() {
     return matchesSearch && matchesFaculty && matchesYear && matchesEnrollmentType
   })
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      {/* Header matching real layout */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="h-8 bg-gray-200 rounded w-48"></div>
+        <div className="h-9 w-32 bg-gray-200 rounded-md"></div>
+      </div>
+
+      {/* Filters matching the real structure */}
+      <div className="flex gap-4 mb-6">
+        <div className="h-9 w-32 bg-gray-200 rounded-md"></div>
+        <div className="h-9 w-28 bg-gray-200 rounded-md"></div>
+        <div className="h-9 w-48 bg-gray-200 rounded-md"></div>
+        <div className="relative h-9 w-64 bg-gray-200 rounded-lg"></div>
+      </div>
+
+      {/* Table skeleton matching structure */}
+      <div className="overflow-auto rounded-lg shadow bg-white">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16"></div></th>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24"></div></th>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-28"></div></th>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16"></div></th>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-12"></div></th>
+              <th className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16"></div></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <tr key={i} className="hover:bg-gray-100">
+                <td className="px-4 py-3">
+                  <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex space-x-1">
+                    <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                    <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                    <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="flex h-screen">
@@ -88,12 +155,16 @@ export default function StudentManagementPage() {
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-2xl font-semibold text-gray-900">จัดการนักศึกษา</h1>
-                  {/* Only show "Add Student" button for admin */}
-                  {role === 'admin' && (
-                    <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
-                      เพิ่มนักศึกษา
+                {loading ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <h1 className="text-2xl font-semibold text-gray-900">จัดการนักศึกษา</h1>
+                      {/* Only show "Add Student" button for admin */}
+                      {role === 'admin' && (
+                        <button onClick={() => router.push("/students/add")} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+                          เพิ่มนักศึกษา
                     </button>
                   )}
                 </div>
@@ -186,6 +257,8 @@ export default function StudentManagementPage() {
               </tbody>
             </table>
                 </div>
+                  </>
+                )}
               </div>
             </div>
           </main>

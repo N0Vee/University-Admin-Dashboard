@@ -20,7 +20,7 @@ export default function AddStudentPage() {
   const [error, setError] = useState("")
   
   // Use custom hook for user role management
-  const { role, loading } = useUserRole(['admin', 'instructor'], '/students')
+  const { role, loading: authLoading } = useUserRole(['admin', 'instructor'], '/students')
 
   const [formData, setFormData] = useState({
     title: '',
@@ -60,7 +60,6 @@ export default function AddStudentPage() {
       const data = await response.json();
       return data.studentId;
     } catch (error) {
-      console.error("❌ Error generating student ID:", error.message);
       return null;
     }
   };
@@ -168,7 +167,6 @@ export default function AddStudentPage() {
       setShowSuccessModal(true)
 
     } catch (err) {
-      console.error('Error adding student:', err)
       setError(err.message || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ')
     } finally {
       setIsLoading(false)

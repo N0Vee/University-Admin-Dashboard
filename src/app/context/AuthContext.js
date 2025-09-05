@@ -21,8 +21,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        setLoading(true)
-        const response = await fetch('/api/auth/get-role')
+        const response = await fetch('/api/auth/get-role', {
+          cache: 'no-store'
+        })
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
         setUser(data)
         
       } catch (error) {
-        console.error('Error fetching user data:', error)
+        // Error handled silently - could be logged to monitoring service
         // Set default role as fallback, but don't redirect automatically
         setRole('student')
         setUser(null)
@@ -54,8 +55,10 @@ export function AuthProvider({ children }) {
 
   const refreshAuth = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/auth/get-role')
+      // Don't set loading to true on refresh to prevent UI flickering
+      const response = await fetch('/api/auth/get-role', {
+        cache: 'no-store'
+      })
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -71,13 +74,12 @@ export function AuthProvider({ children }) {
       setUser(data)
       
     } catch (error) {
-      console.error('Error refreshing user data:', error)
+      // Error handled silently - could be logged to monitoring service
       setRole('student')
       setUser(null)
       setUserId(null)
-    } finally {
-      setLoading(false)
     }
+    // Don't set loading to false here as it wasn't set to true
   }
 
   const logout = async () => {

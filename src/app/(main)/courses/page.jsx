@@ -1,50 +1,26 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useAuth } from '@/app/context/AuthContext'
 import Sidebar from '@/app/components/Sidebar'
-
-import {
-  BellIcon,
-  MagnifyingGlassIcon,
-  ChevronDownIcon,
-  Cog6ToothIcon,
-  UserCircleIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  EllipsisVerticalIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
-  FunnelIcon
-} from '@heroicons/react/24/outline'
-import {
-  AcademicCapIcon,
-  UserGroupIcon,
-  BookOpenIcon,
-  ClipboardDocumentListIcon,
-  ChartBarIcon,
-  CalendarDaysIcon,
-  ClockIcon
-} from '@heroicons/react/24/solid'
+import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { BookOpenIcon, AcademicCapIcon, CalendarDaysIcon, UserGroupIcon } from '@heroicons/react/24/solid'
 
 export default function CourseManagementPage() {
   const router = useRouter()
-  const { role, loading, user } = useAuth()
+  const { role, user } = useAuth()
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSemester, setFilterSemester] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [enrollments, setEnrollments] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true)
         if (role === 'admin') {
           // Admin sees all courses
           const coursesRes = await fetch('/api/courses')
@@ -77,7 +53,6 @@ export default function CourseManagementPage() {
             throw new Error(`Fetch failed: ${enrollmentsRes.status} ${enrollmentsRes.statusText}`);
           }
           const enrollmentsData = await enrollmentsRes.json()
-          setEnrollments(enrollmentsData)
           
           // Extract courses from enrollments
           const studentCourses = enrollmentsData.map(enrollment => ({
@@ -89,7 +64,9 @@ export default function CourseManagementPage() {
           setCourses(studentCourses)
         }
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -206,6 +183,79 @@ export default function CourseManagementPage() {
     }
   };
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      {/* Page header matching the real layout */}
+      <div className="md:flex md:items-center md:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="h-8 bg-gray-200 rounded w-56 mb-1"></div>
+          <div className="h-4 bg-gray-200 rounded w-80 mt-1"></div>
+        </div>
+        <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+          <div className="h-9 w-32 bg-gray-200 rounded-md"></div>
+          <div className="h-9 w-36 bg-gray-200 rounded-md"></div>
+        </div>
+      </div>
+
+      {/* Stats matching the exact layout */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:px-6 hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gray-200 rounded-md mr-4"></div>
+                <div>
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="mt-8 bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <div className="sm:flex sm:items-center sm:justify-between">
+            <div className="flex flex-1 items-center space-x-4">
+              <div className="relative flex-1 max-w-xs">
+                <div className="h-9 bg-gray-200 rounded-md w-64"></div>
+              </div>
+              <div className="h-9 w-32 bg-gray-200 rounded-md"></div>
+              <div className="h-9 w-28 bg-gray-200 rounded-md"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Course Grid */}
+      <div className="mt-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="mt-4 flex justify-end space-x-2">
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="flex h-screen">
@@ -217,30 +267,34 @@ export default function CourseManagementPage() {
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                {/* Page header */}
-                <div className="md:flex md:items-center md:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
-                      {role === 'admin' ? 'จัดการวิชาเรียน' : 
-                       role === 'instructor' ? 'วิชาที่สอน' : 
-                       'วิชาที่ลงทะเบียน'}
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {role === 'admin' ? 'จัดการข้อมูลวิชาเรียน การลงทะเบียน และการเรียนการสอน' : 
-                       role === 'instructor' ? 'ดูข้อมูลวิชาที่สอน และจัดการข้อมูลการเรียนการสอน' : 
-                       'ดูข้อมูลวิชาที่ลงทะเบียน และสถานะการลงทะเบียน'}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex md:ml-4 md:mt-0">
-                    {role !== 'student' && (
-                      <button
-                        type="button"
-                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                      >
-                        ส่งออกข้อมูล
-                      </button>
-                    )}
-                    {/* Only show "Add Course" button for admin and instructor */}
+                {loading ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <>
+                    {/* Page header */}
+                    <div className="md:flex md:items-center md:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
+                          {role === 'admin' ? 'จัดการวิชาเรียน' : 
+                           role === 'instructor' ? 'วิชาที่สอน' : 
+                           'วิชาที่ลงทะเบียน'}
+                        </h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {role === 'admin' ? 'จัดการข้อมูลวิชาเรียน การลงทะเบียน และการเรียนการสอน' : 
+                           role === 'instructor' ? 'ดูข้อมูลวิชาที่สอน และจัดการข้อมูลการเรียนการสอน' : 
+                           'ดูข้อมูลวิชาที่ลงทะเบียน และสถานะการลงทะเบียน'}
+                        </p>
+                      </div>
+                      <div className="mt-4 flex md:ml-4 md:mt-0">
+                        {role !== 'student' && (
+                          <button
+                            type="button"
+                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                          >
+                            ส่งออกข้อมูล
+                          </button>
+                        )}
+                        {/* Only show "Add Course" button for admin and instructor */}
                     {(role === 'admin' || role === 'instructor') && (
                       <button
                         type="button"
@@ -508,6 +562,8 @@ export default function CourseManagementPage() {
                     )}
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             </div>
           </main>

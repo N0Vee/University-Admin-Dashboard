@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
@@ -36,6 +37,7 @@ export default function CourseDetailPage() {
   const router = useRouter()
   const params = useParams()
   const { course_code } = params
+  const [loading, setLoading] = useState(true)
   const [course, setCourse] = useState([])
   const [students, setStudents] = useState([])
   const [role, setRole] = useState(null)
@@ -69,11 +71,14 @@ export default function CourseDetailPage() {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
+        setLoading(true)
         const res = await fetch(`/api/course/${course_code}`)
         const data = await res.json()
         setCourse(data)
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
+      } finally {
+        setLoading(false)
       }
 
     }
@@ -89,7 +94,7 @@ export default function CourseDetailPage() {
         const data = await res.json()
         setInstructor(data)
       } catch (error) {
-        console.error(error)
+        // Error handled silently - could be logged to monitoring service
       }
 
     }
@@ -190,6 +195,70 @@ export default function CourseDetailPage() {
     { id: 'announcements', name: 'ประกาศ', icon: CalendarDaysIcon }
   ]
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      {/* Back button and header */}
+      <div className="mb-6">
+        <div className="h-4 bg-gray-200 rounded w-48 mb-4"></div>
+      </div>
+
+      <div className="md:flex md:items-center md:justify-between mb-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center mb-4">
+            <div className="h-8 bg-gray-200 rounded w-64 mr-4"></div>
+            <div className="h-6 bg-gray-200 rounded w-20"></div>
+          </div>
+          <div className="h-4 bg-gray-200 rounded w-80"></div>
+        </div>
+        <div className="mt-4 flex md:ml-4 md:mt-0 space-x-2">
+          <div className="h-9 w-20 bg-gray-200 rounded"></div>
+          <div className="h-9 w-20 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+
+      {/* Course Info Cards */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="bg-white shadow rounded-lg">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="h-10 w-10 bg-gray-200 rounded mr-4"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-10 bg-gray-200 rounded w-24"></div>
+          ))}
+        </nav>
+      </div>
+
+      {/* Content */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="p-6">
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="border-b border-gray-200 pb-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="flex h-screen">
@@ -200,20 +269,24 @@ export default function CourseDetailPage() {
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                {/* Back button and page header */}
-                <div className="mb-6">
-                  <button
-                    onClick={() => router.back()}
-                    className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-                  >
-                    <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                    กลับไปหน้าจัดการวิชาเรียน
-                  </button>
-                </div>
+                {loading ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <React.Fragment>
+                    {/* Back button and page header */}
+                    <div className="mb-6">
+                      <button
+                        onClick={() => router.back()}
+                        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                        กลับไปหน้าจัดการวิชาเรียน
+                      </button>
+                    </div>
 
-                <div className="md:flex md:items-center md:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center">
+                    <div className="md:flex md:items-center md:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center">
                       <div>
                         <div className="flex items-center">
                           <h1 className="text-2xl font-medium leading-7 text-gray-900 sm:truncate sm:text-3xl">
@@ -502,7 +575,8 @@ export default function CourseDetailPage() {
                       ))}
                     </div>
                   )}
-                </div>
+                  </React.Fragment>
+                )}
               </div>
             </div>
           </main>
