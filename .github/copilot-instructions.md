@@ -106,14 +106,24 @@ Key features include role-based access control, student and course management, a
 
    export default async function handler(req, res) {
        if (req.method === 'POST') {
-           const { data, error } = await supabase.from('students').insert(req.body);
-           if (error) return res.status(400).json({ error: error.message });
-           return res.status(200).json(data);
+           try {
+               const { data, error } = await supabase.from('students').insert(req.body);
+               if (error) {
+                   return res.status(400).json({ error: error.message });
+               }
+               return res.status(200).json(data);
+           } catch (err) {
+               return res.status(500).json({ error: 'Internal Server Error' });
+           }
        }
        res.setHeader('Allow', ['POST']);
        res.status(405).end(`Method ${req.method} Not Allowed`);
    }
    ```
+
+3. Ensure the route follows the naming conventions and folder structure used in the `src/app/api` directory. For example:
+   - Use dynamic route folders (e.g., `[id]`, `[course_code]`) for resource-specific operations.
+   - Group related routes under a common parent folder (e.g., `students/`, `courses/`).
 
 ---
 
