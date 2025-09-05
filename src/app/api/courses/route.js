@@ -11,7 +11,7 @@ export async function GET(req) {
 
   const { data, error: coursesError } = await supabase
     .from('courses')
-    .select('*')
+    .select('*,instructors!courses_instructor_fkey(name)')
 
   if (coursesError) {
     return NextResponse.json({ error: error.message }, { status: 500 });

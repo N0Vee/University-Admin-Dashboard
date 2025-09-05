@@ -2,12 +2,14 @@
 import {
     BookOpenIcon,
     ChartBarIcon,
+    ClipboardDocumentListIcon,
 } from '@heroicons/react/24/solid'
 
 export default function InstructorSidebar({ currentPath }) {
     const navigation = [
         { name: 'ภาพรวม', href: '/dashboard', icon: ChartBarIcon },
-        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon }
+        { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
+        { name: 'การลงทะเบียน', href: '/register', icon: ClipboardDocumentListIcon }
     ].map(item => ({
         ...item,
         current: item.href === currentPath,

@@ -2,6 +2,7 @@
 import {
   BookOpenIcon,
   UserIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/solid'
 import { useAuth } from '../context/AuthContext'
 
@@ -11,6 +12,7 @@ export default function StudentSidebar({ currentPath }) {
   const navigation = [
     { name: 'โปรไฟล์', href: `/students/profile/${userId}`, icon: UserIcon },
     { name: 'รายวิชา', href: '/courses', icon: BookOpenIcon },
+    { name: 'ลงทะเบียนเรียน', href: '/register', icon: ClipboardDocumentListIcon },
   ].map(item => ({
     ...item,
     current: item.href === currentPath,

@@ -82,10 +82,10 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-                        ระบบจัดการนักศึกษา
+                        Univerysity Managment System
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        เข้าสู่ระบบเพื่อจัดการข้อมูลนักศึกษา
+                        เข้าสู่ระบบด้วยบัญชีของคุณ
                     </p>
                 </div>
 

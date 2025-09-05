@@ -54,3 +54,50 @@ export async function GET(req) {
 
   return NextResponse.json(data);
 }
+
+// POST - Create new enrollment
+export async function POST(req) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = await createSupabaseClientWithAuth(token);
+
+  try {
+    const { course_code, student_id, status = 'pending' } = await req.json();
+
+    // Check if enrollment already exists
+    const { data: existingEnrollment } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('course_code', course_code)
+      .eq('student_id', student_id)
+      .single();
+
+    if (existingEnrollment) {
+      return NextResponse.json({ error: "Already enrolled in this course" }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('enrollments')
+      .insert({
+        course_code,
+        student_id,
+        status,
+        enrolled_at: new Date().toISOString()
+      })
+      .select();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data[0], { status: 201 });
+
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
